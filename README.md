@@ -81,7 +81,7 @@ await component.destroy()
 
 Note that using an Etch component does not require a reference to the Etch library. Etch is an implementation detail, and from the outside the component is just an ordinary object with a simple interface and an `.element` property. You can also take a more declarative approach by embedding Etch components directly within other Etch components, covered later in this document.
 
-Virtual DOM trees can also be written without JSX by calling the `etch.dom` helper directly: `etch.dom('div', {className: 'foo'}, children...)`, or via the tag shorthand `etch.dom.div({className: 'foo'}, children...)`.
+Virtual DOM trees can also be written without JSX by calling the `etch.dom` helper directly: `etch.dom('div', {className: 'foo'}, children...)`, or via the tag shorthand `etch.dom.div({className: 'foo'}, children...)`. Children given as `null` or `false` are skipped, so conditional rendering like `{condition && <div />}` works as expected.
 
 ## API
 

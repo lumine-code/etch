@@ -55,16 +55,16 @@ describe('etch.dom', () => {
     assert.strictEqual(component.element.outerHTML, '<svg><circle></circle></svg>');
   });
 
-  it('ignores nulls passed in the place of children, but throws an error if other invalid values are passed', () => {
+  it('ignores nulls and false passed in the place of children, but throws an error if other invalid values are passed', () => {
     const element = etch.render(
-      etch.dom("div", null, etch.dom("span", null), null, etch.dom("p", null))
+      etch.dom("div", null, etch.dom("span", null), null, false, etch.dom("p", null))
     );
 
     assert.deepStrictEqual(Array.from(element.children).map((c) => c.tagName), ['SPAN', 'P']);
 
     assert.throws(() => etch.render(
-      etch.dom("div", null, false)
-    ), /Invalid child node: false/);
+      etch.dom("div", null, true)
+    ), /Invalid child node: true/);
 
     assert.throws(() => etch.render(
       etch.dom("div", null, undefined)
