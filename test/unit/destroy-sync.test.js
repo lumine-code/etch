@@ -1,85 +1,88 @@
-/** @jsx etch.dom */
+const { describe, it } = require('node:test');
+const assert = require('node:assert');
 
-const etch = require('../../lib/index')
+require('../helpers/setup');
+
+const etch = require('../../lib/index');
 
 describe('etch.destroySync(component)', () => {
   it('synchronously removes the component\'s element from the document and calls `destroy` on child components', () => {
     class ParentComponent {
-      constructor () {
-        this.destroyCallCount = 0
-        etch.initialize(this)
+      constructor() {
+        this.destroyCallCount = 0;
+        etch.initialize(this);
       }
 
-      render () {
+      render() {
         return (
-          <div>
-            <div>
-              <ChildComponent ref='child' />
-            </div>
-          </div>
-        )
+          etch.dom("div", null,
+          etch.dom("div", null,
+          etch.dom(ChildComponent, { ref: "child" })
+          )
+          ));
+
       }
 
-      update () {}
+      update() {}
 
-      destroy () {
-        etch.destroy(this)
-        this.destroyCallCount++
+      destroy() {
+        etch.destroy(this);
+        this.destroyCallCount++;
       }
     }
 
     class ChildComponent {
-      constructor () {
-        this.destroyCallCount = 0
-        etch.initialize(this)
+      constructor() {
+        this.destroyCallCount = 0;
+        etch.initialize(this);
       }
 
-      render () {
-        return <div>child</div>
+      render() {
+        return etch.dom("div", null, "child");
       }
 
-      update () {}
+      update() {}
 
-      destroy () {
-        etch.destroy(this)
-        this.destroyCallCount++
+      destroy() {
+        etch.destroy(this);
+        this.destroyCallCount++;
       }
     }
 
-    let parent = new ParentComponent()
-    let child = parent.refs.child
-    let container = document.createElement('div')
-    container.appendChild(parent.element)
+    let parent = new ParentComponent();
+    let child = parent.refs.child;
+    let container = document.createElement('div');
+    container.appendChild(parent.element);
 
-    etch.destroySync(parent)
+    etch.destroySync(parent);
 
-    expect(parent.destroyCallCount).to.equal(0) // We don't call `destroy` on the component itself
-    expect(child.destroyCallCount).to.equal(1) // But we do call it on child components
-    expect(parent.element.parentElement).to.be.null
-    expect(child.element.parentElement).not.to.be.null // Only removes the root node to avoid unnecessary DOM writes
-  })
+    assert.strictEqual(parent.destroyCallCount, 0); // We don't call `destroy` on the component itself
+    assert.strictEqual(child.destroyCallCount, 1); // But we do call it on child components
+    assert.strictEqual(parent.element.parentElement, null);
+    assert.notStrictEqual(child.element.parentElement, null); // Only removes the root node to avoid unnecessary DOM writes
+  });
 
   it('does not remove the DOM node when passed false as a second argument', () => {
     class Component {
-      constructor () {
-        etch.initialize(this)
+      constructor() {
+        etch.initialize(this);
       }
 
-      render () {
+      render() {
         return (
-          <div />
-        )
+          etch.dom("div", null));
+
       }
 
-      update () {}
+      update() {}
     }
 
-    let component = new Component()
-    let container = document.createElement('div')
-    container.appendChild(component.element)
+    let component = new Component();
+    let container = document.createElement('div');
+    container.appendChild(component.element);
 
-    etch.destroySync(component, false)
+    etch.destroySync(component, false);
 
-    expect(component.element.parentElement).to.equal(container)
-  })
-})
+    assert.strictEqual(component.element.parentElement, container);
+  });
+});

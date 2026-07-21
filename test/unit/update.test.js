@@ -1,295 +1,298 @@
-/** @jsx etch.dom */
+const { describe, it } = require('node:test');
+const assert = require('node:assert');
 
-const etch = require('../../lib/index')
+require('../helpers/setup');
+
+const etch = require('../../lib/index');
 
 describe('etch.update(component)', () => {
   it('schedules an update of the element associated with the component', async () => {
     let component = {
       greeting: 'Hello',
 
-      render () {
-        return <div>{this.greeting} World</div>
+      render() {
+        return etch.dom("div", null, this.greeting, " World");
       },
 
-      update () {}
-    }
+      update() {}
+    };
 
-    etch.initialize(component)
-    expect(component.element.textContent).to.equal('Hello World')
+    etch.initialize(component);
+    assert.strictEqual(component.element.textContent, 'Hello World');
 
-    component.greeting = 'Goodbye'
+    component.greeting = 'Goodbye';
 
-    await etch.update(component)
+    await etch.update(component);
 
-    expect(component.element.textContent).to.equal('Goodbye World')
-  })
+    assert.strictEqual(component.element.textContent, 'Goodbye World');
+  });
 
   it('updates individual compontents no more than once in a given update cycle', async () => {
     let componentA = {
       renderCount: 0,
 
-      render () {
-        this.renderCount++
-        return <div />
+      render() {
+        this.renderCount++;
+        return etch.dom("div", null);
       },
 
-      update () {}
-    }
+      update() {}
+    };
 
     let componentB = {
       renderCount: 0,
 
-      render () {
-        this.renderCount++
-        return <div />
+      render() {
+        this.renderCount++;
+        return etch.dom("div", null);
       },
 
-      update () {}
-    }
+      update() {}
+    };
 
-    etch.initialize(componentA)
-    etch.initialize(componentB)
+    etch.initialize(componentA);
+    etch.initialize(componentB);
 
-    etch.update(componentA)
-    etch.update(componentB)
-    etch.update(componentA)
-    await etch.update(componentB)
+    etch.update(componentA);
+    etch.update(componentB);
+    etch.update(componentA);
+    await etch.update(componentB);
 
-    expect(componentA.renderCount).to.equal(2)
-    expect(componentB.renderCount).to.equal(2)
-  })
+    assert.strictEqual(componentA.renderCount, 2);
+    assert.strictEqual(componentB.renderCount, 2);
+  });
 
   it('updates references to DOM elements', async () => {
     let component = {
       condition: true,
 
-      render () {
+      render() {
         if (this.condition) {
-          return <div><span ref='greeting'>Hello</span></div>
+          return etch.dom("div", null, etch.dom("span", { ref: "greeting" }, "Hello"));
         } else {
-          return <div><span ref='greeted'>World</span></div>
+          return etch.dom("div", null, etch.dom("span", { ref: "greeted" }, "World"));
         }
       },
 
-      update () {}
-    }
-    etch.initialize(component)
+      update() {}
+    };
+    etch.initialize(component);
 
-    expect(component.refs.greeting.textContent).to.equal('Hello')
-    expect(component.refs.greeted).to.be.undefined
+    assert.strictEqual(component.refs.greeting.textContent, 'Hello');
+    assert.strictEqual(component.refs.greeted, undefined);
 
-    component.condition = false
-    await etch.update(component)
+    component.condition = false;
+    await etch.update(component);
 
-    expect(component.refs.greeted.textContent).to.equal('World')
-    expect(component.refs.greeting).to.be.undefined
-  })
+    assert.strictEqual(component.refs.greeted.textContent, 'World');
+    assert.strictEqual(component.refs.greeting, undefined);
+  });
 
   it('calls the destroy method on removed child components if it is present', async () => {
-    let destroyCalls = []
+    let destroyCalls = [];
 
     class ParentComponent {
-      constructor () {
-        this.renderChildren = true
-        etch.initialize(this)
+      constructor() {
+        this.renderChildren = true;
+        etch.initialize(this);
       }
 
-      render () {
+      render() {
         if (this.renderChildren) {
           return (
-            <div>
-              <ChildComponent ref='child' />
-              <ChildComponentWithNoDestroyMethod ref='childWithNoDestroyMethod' />
-            </div>
-          )
+            etch.dom("div", null,
+            etch.dom(ChildComponent, { ref: "child" }),
+            etch.dom(ChildComponentWithNoDestroyMethod, { ref: "childWithNoDestroyMethod" })
+            ));
+
         } else {
-          return <div />
+          return etch.dom("div", null);
         }
       }
 
-      update () {}
+      update() {}
 
       // this method should not be called when we call etch.destroy with this component
-      destroy () {
-        etch.destroy(this)
-        destroyCalls.push(this)
+      destroy() {
+        etch.destroy(this);
+        destroyCalls.push(this);
       }
     }
 
     class ChildComponent {
-      constructor () {
-        etch.initialize(this)
+      constructor() {
+        etch.initialize(this);
       }
 
-      render () {
-        return <div><GrandchildComponent ref='grandchild' /></div>
+      render() {
+        return etch.dom("div", null, etch.dom(GrandchildComponent, { ref: "grandchild" }));
       }
 
-      update () {}
+      update() {}
 
-      destroy () {
-        etch.destroy(this)
-        destroyCalls.push(this)
+      destroy() {
+        etch.destroy(this);
+        destroyCalls.push(this);
       }
     }
 
     class GrandchildComponent {
-      constructor () {
-        etch.initialize(this)
+      constructor() {
+        etch.initialize(this);
       }
 
-      render () {
-        return <div />
+      render() {
+        return etch.dom("div", null);
       }
 
-      update () {}
+      update() {}
 
-      destroy () {
-        etch.destroy(this)
-        destroyCalls.push(this)
+      destroy() {
+        etch.destroy(this);
+        destroyCalls.push(this);
       }
     }
 
     class ChildComponentWithNoDestroyMethod {
-      constructor () {
-        etch.initialize(this)
+      constructor() {
+        etch.initialize(this);
       }
 
-      update () {}
+      update() {}
 
-      render () {
-        return <div />
+      render() {
+        return etch.dom("div", null);
       }
     }
 
-    let parent = new ParentComponent()
-    let child = parent.refs.child
-    let grandchild = child.refs.grandchild
+    let parent = new ParentComponent();
+    let child = parent.refs.child;
+    let grandchild = child.refs.grandchild;
 
-    parent.renderChildren = false
-    await etch.update(parent)
+    parent.renderChildren = false;
+    await etch.update(parent);
 
-    expect(destroyCalls).to.eql([grandchild, child])
-    expect(parent.element.innerHTML).to.equal('')
-  })
+    assert.deepStrictEqual(destroyCalls, [grandchild, child]);
+    assert.strictEqual(parent.element.innerHTML, '');
+  });
 
   it('replaces the DOM node when the top-level node type is changed during render', () => {
     class Component {
-      constructor () {
-        this.renderDiv = true
-        etch.initialize(this)
+      constructor() {
+        this.renderDiv = true;
+        etch.initialize(this);
       }
 
-      render () {
+      render() {
         if (this.renderDiv) {
-          return <div />
+          return etch.dom("div", null);
         } else {
-          return <span />
+          return etch.dom("span", null);
         }
       }
 
-      update ({renderDiv}) {
-        this.renderDiv = renderDiv
-        etch.updateSync(this)
+      update({ renderDiv }) {
+        this.renderDiv = renderDiv;
+        etch.updateSync(this);
       }
     }
 
-    const component = new Component()
-    const parent = document.createElement('div')
-    parent.appendChild(component.element)
+    const component = new Component();
+    const parent = document.createElement('div');
+    parent.appendChild(component.element);
 
-    expect(component.element.tagName).to.equal('DIV')
-    expect(parent.firstChild).to.equal(component.element)
+    assert.strictEqual(component.element.tagName, 'DIV');
+    assert.strictEqual(parent.firstChild, component.element);
 
-    component.update({renderDiv: false})
-    expect(component.element.tagName).to.equal('SPAN')
-    expect(parent.firstChild).to.equal(component.element)
-  })
+    component.update({ renderDiv: false });
+    assert.strictEqual(component.element.tagName, 'SPAN');
+    assert.strictEqual(parent.firstChild, component.element);
+  });
 
   describe('when passing false as the second argument', () => {
     it('throws when attempting to change the top-level node type', () => {
       class Component {
-        constructor () {
-          this.renderDiv = true
-          etch.initialize(this)
+        constructor() {
+          this.renderDiv = true;
+          etch.initialize(this);
         }
 
-        render () {
+        render() {
           if (this.renderDiv) {
-            return <div />
+            return etch.dom("div", null);
           } else {
-            return <span />
+            return etch.dom("span", null);
           }
         }
 
-        update () {}
+        update() {}
       }
 
-      let component = new Component()
-      component.renderDiv = false
+      let component = new Component();
+      component.renderDiv = false;
 
-      expect(() => {
-        etch.updateSync(component, false)
-      }).to.throw(/root node type/)
-    })
-  })
+      assert.throws(() => {
+        etch.updateSync(component, false);
+      }, /root node type/);
+    });
+  });
 
   it('calls writeAfterUpdate and readAfterUpdate hooks at the appropriate times', async () => {
-    let events = []
+    let events = [];
 
     class ParentComponent {
-      constructor () {
-        etch.initialize(this)
+      constructor() {
+        etch.initialize(this);
       }
 
-      render () {
+      render() {
         return (
-          <div>
-            <ChildComponent />
-          </div>
-        )
+          etch.dom("div", null,
+          etch.dom(ChildComponent, null)
+          ));
+
       }
 
-      update () {
-        etch.update(this)
+      update() {
+        etch.update(this);
       }
 
-      writeAfterUpdate () {
-        events.push('parent-write')
+      writeAfterUpdate() {
+        events.push('parent-write');
       }
 
-      readAfterUpdate () {
-        events.push('parent-read')
+      readAfterUpdate() {
+        events.push('parent-read');
       }
     }
 
     class ChildComponent {
-      constructor () {
-        etch.initialize(this)
+      constructor() {
+        etch.initialize(this);
       }
 
-      render () {
-        return <div />
+      render() {
+        return etch.dom("div", null);
       }
 
-      update () {
-        etch.update(this)
+      update() {
+        etch.update(this);
       }
 
-      writeAfterUpdate () {
-        events.push('child-write')
+      writeAfterUpdate() {
+        events.push('child-write');
       }
 
-      readAfterUpdate () {
-        events.push('child-read')
+      readAfterUpdate() {
+        events.push('child-read');
       }
     }
 
-    let parent = new ParentComponent()
-    expect(events).to.eql([])
+    let parent = new ParentComponent();
+    assert.deepStrictEqual(events, []);
 
-    await etch.update(parent)
+    await etch.update(parent);
 
-    expect(events).to.eql(['child-write', 'parent-write', 'child-read', 'parent-read'])
-  })
-})
+    assert.deepStrictEqual(events, ['child-write', 'parent-write', 'child-read', 'parent-read']);
+  });
+});

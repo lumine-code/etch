@@ -1,33 +1,35 @@
-/** @jsx etch.dom */
+const { describe, it } = require('node:test');
+const assert = require('node:assert');
 
-const etch = require('../../lib/index')
+require('../helpers/setup');
+
+const etch = require('../../lib/index');
 
 describe('svg support', () => {
   it('sets the correct tag thingies', () => {
     let component = {
-      render () {
-        return <svg><path ref='path' /></svg>
+      render() {
+        return etch.dom("svg", null, etch.dom("path", { ref: "path" }));
       },
 
-      update () {}
-    }
+      update() {}
+    };
 
-    etch.initialize(component)
-    let elem = component.element
-    expect(elem.constructor).to.equal(SVGSVGElement)
-    // expect(component.refs.path.tagName).to.equal('PATH')
-  })
+    etch.initialize(component);
+    let elem = component.element;
+    assert.strictEqual(elem.constructor, SVGSVGElement);
+  });
 
   it('translates className props to class', () => {
     let component = {
-      render () {
-        return <svg className='myclass' />
+      render() {
+        return etch.dom("svg", { className: "myclass" });
       },
 
-      update () {}
-    }
+      update() {}
+    };
 
-    etch.initialize(component)
-    expect(component.element.classList[0]).to.equal('myclass')
-  })
-})
+    etch.initialize(component);
+    assert.strictEqual(component.element.classList[0], 'myclass');
+  });
+});

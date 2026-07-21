@@ -1,441 +1,444 @@
-/** @jsx etch.dom */
+const { describe, it } = require('node:test');
+const assert = require('node:assert');
 
-const etch = require('../../lib/index')
+require('../helpers/setup');
+
+const etch = require('../../lib/index');
 
 describe('etch.dom', () => {
   it('defaults properties to an empty object', () => {
-    let props = null
+    let props = null;
 
     class MyComponent {
-      constructor (p) {
-        props = p
+      constructor(p) {
+        props = p;
       }
 
-      render () { return <span /> }
+      render() {return etch.dom("span", null);}
 
-      update () {}
+      update() {}
     }
 
     let owner = {
-      render () {
-        return <MyComponent />
+      render() {
+        return etch.dom(MyComponent, null);
       },
 
-      update () {}
-    }
+      update() {}
+    };
 
-    etch.initialize(owner)
-    expect(props).to.eql({})
-  })
+    etch.initialize(owner);
+    assert.deepStrictEqual(props, {});
+  });
 
   it('normalizes camel-cased property names to dash-seperated attributes for SVG tags', function () {
     let component = {
-      render () {
-        return <circle colorProfile='foo' colorRendering='bar' />
+      render() {
+        return etch.dom("circle", { colorProfile: "foo", colorRendering: "bar" });
       },
-      update () {}
-    }
+      update() {}
+    };
 
-    etch.initialize(component)
-    expect(component.element.outerHTML).to.equal('<circle color-profile="foo" color-rendering="bar"></circle>')
-  })
+    etch.initialize(component);
+    assert.strictEqual(component.element.outerHTML, '<circle color-profile="foo" color-rendering="bar"></circle>');
+  });
 
   it('supports assigning innerHTML to SVG tags', function () {
     let component = {
-      render () {
-        return <svg innerHTML="<circle></circle>"></svg>
+      render() {
+        return etch.dom("svg", { innerHTML: "<circle></circle>" });
       },
-      update () {}
-    }
+      update() {}
+    };
 
-    etch.initialize(component)
-    expect(component.element.outerHTML).to.equal('<svg><circle></circle></svg>')
-  })
+    etch.initialize(component);
+    assert.strictEqual(component.element.outerHTML, '<svg><circle></circle></svg>');
+  });
 
   it('ignores nulls passed in the place of children, but throws an error if other invalid values are passed', () => {
     const element = etch.render(
-      <div><span/>{null}<p/></div>
+      etch.dom("div", null, etch.dom("span", null), null, etch.dom("p", null))
     );
 
-    expect(Array.from(element.children).map(c => c.tagName)).to.eql(['SPAN', 'P'])
+    assert.deepStrictEqual(Array.from(element.children).map((c) => c.tagName), ['SPAN', 'P']);
 
-    expect(() => etch.render(
-      <div>{false}</div>
-    )).to.throw('Invalid child node: false')
+    assert.throws(() => etch.render(
+      etch.dom("div", null, false)
+    ), /Invalid child node: false/);
 
-    expect(() => etch.render(
-      <div>{undefined}</div>
-    )).to.throw('Invalid child node: undefined')
+    assert.throws(() => etch.render(
+      etch.dom("div", null, undefined)
+    ), /Invalid child node: undefined/);
 
-    expect(() => etch.render(
-      <div>{() => {}}</div>
-    )).to.throw('Invalid child node: () => {}')
-  })
+    assert.throws(() => etch.render(
+      etch.dom("div", null, () => {})
+    ), /Invalid child node: \(\) => \{\}/);
+  });
 
   describe('when a component constructor is used as a tag name', () => {
     describe('on initial render', () => {
       it('constructs the component with the specified properties and children, then appends its element to the DOM', () => {
         class ChildComponent {
-          constructor (properties, children) {
-            this.properties = properties
-            this.children = children
-            etch.initialize(this)
+          constructor(properties, children) {
+            this.properties = properties;
+            this.children = children;
+            etch.initialize(this);
           }
 
-          render () {
-            return <div>{this.properties.greeting} {this.children}</div>
+          render() {
+            return etch.dom("div", null, this.properties.greeting, " ", this.children);
           }
 
-          update () {}
+          update() {}
         }
 
         let parentComponent = {
-          render () {
+          render() {
             return (
-              <div>
-                <ChildComponent greeting='Hello'>
-                  <span>World</span>
-                </ChildComponent>
-              </div>
-            )
+              etch.dom("div", null,
+              etch.dom(ChildComponent, { greeting: "Hello" },
+              etch.dom("span", null, "World")
+              )
+              ));
+
           },
 
-          update () {}
-        }
+          update() {}
+        };
 
-        etch.initialize(parentComponent)
-        expect(parentComponent.element.textContent).to.equal('Hello World')
-      })
-    })
+        etch.initialize(parentComponent);
+        assert.strictEqual(parentComponent.element.textContent, 'Hello World');
+      });
+    });
 
     describe('on update', () => {
       describe('if the child component class is the same', () => {
         describe('if the child component defines an update() method', () => {
           it('invokes the update method with the new properties and children', async () => {
             class ChildComponent {
-              constructor (properties, children) {
-                this.properties = properties
-                this.children = children
-                etch.initialize(this)
+              constructor(properties, children) {
+                this.properties = properties;
+                this.children = children;
+                etch.initialize(this);
               }
 
-              render () {
-                return <div>{this.properties.greeting} {this.children}</div>
+              render() {
+                return etch.dom("div", null, this.properties.greeting, " ", this.children);
               }
 
-              update (properties, children) {
-                this.properties = properties
-                this.children = children
-                etch.update(this)
+              update(properties, children) {
+                this.properties = properties;
+                this.children = children;
+                etch.update(this);
               }
             }
 
             let parentComponent = {
               greeting: 'Hello',
               greeted: 'World',
-              render () {
+              render() {
                 return (
-                  <div>
-                    <ChildComponent greeting={this.greeting}>
-                      <span>{this.greeted}</span>
-                    </ChildComponent>
-                  </div>
-                )
+                  etch.dom("div", null,
+                  etch.dom(ChildComponent, { greeting: this.greeting },
+                  etch.dom("span", null, this.greeted)
+                  )
+                  ));
+
               },
 
-              update () {}
-            }
+              update() {}
+            };
 
-            etch.initialize(parentComponent)
-            expect(parentComponent.element.textContent).to.equal('Hello World')
-            let initialChildElement = parentComponent.element.firstChild
+            etch.initialize(parentComponent);
+            assert.strictEqual(parentComponent.element.textContent, 'Hello World');
+            let initialChildElement = parentComponent.element.firstChild;
 
-            parentComponent.greeting = 'Goodnight'
-            parentComponent.greeted = 'Moon'
-            await etch.update(parentComponent)
+            parentComponent.greeting = 'Goodnight';
+            parentComponent.greeted = 'Moon';
+            await etch.update(parentComponent);
 
-            expect(parentComponent.element.textContent).to.equal('Goodnight Moon')
-            expect(parentComponent.element.firstChild).to.equal(initialChildElement)
-          })
-        })
+            assert.strictEqual(parentComponent.element.textContent, 'Goodnight Moon');
+            assert.strictEqual(parentComponent.element.firstChild, initialChildElement);
+          });
+        });
 
         describe('if the child component does not define an update method', () => {
           it('throws an error', async () => {
             let component = {
-              render () {
+              render() {
                 return (
-                  <div />
-                )
-              }
-            }
+                  etch.dom("div", null));
 
-            expect(() => etch.initialize(component)).to.throw(Error)
-          })
-        })
-      })
+              }
+            };
+
+            assert.throws(() => etch.initialize(component), Error);
+          });
+        });
+      });
 
       describe('if the component class changes', () => {
         it('builds a new component instance and replaces the previous element with its element', async () => {
           class ChildComponentA {
-            constructor () {
-              etch.initialize(this)
+            constructor() {
+              etch.initialize(this);
             }
 
-            render () {
-              return <div>A</div>
+            render() {
+              return etch.dom("div", null, "A");
             }
 
-            update () {}
+            update() {}
           }
 
           class ChildComponentB {
-            constructor () {
-              etch.initialize(this)
+            constructor() {
+              etch.initialize(this);
             }
 
-            render () {
-              return <div>B</div>
+            render() {
+              return etch.dom("div", null, "B");
             }
 
-            update () {}
+            update() {}
           }
 
           let parentComponent = {
             condition: true,
 
-            render () {
+            render() {
               if (this.condition) {
-                return <div><ChildComponentA /></div>
+                return etch.dom("div", null, etch.dom(ChildComponentA, null));
               } else {
-                return <div><ChildComponentB /></div>
+                return etch.dom("div", null, etch.dom(ChildComponentB, null));
               }
             },
 
-            update () {}
-          }
+            update() {}
+          };
 
-          etch.initialize(parentComponent)
-          expect(parentComponent.element.textContent).to.equal('A')
-          let initialChildElement = parentComponent.element.firstChild
+          etch.initialize(parentComponent);
+          assert.strictEqual(parentComponent.element.textContent, 'A');
+          let initialChildElement = parentComponent.element.firstChild;
 
-          parentComponent.condition = false
-          await etch.update(parentComponent)
+          parentComponent.condition = false;
+          await etch.update(parentComponent);
 
-          expect(parentComponent.element.textContent).to.equal('B')
-          expect(parentComponent.element.firstChild).not.to.equal(initialChildElement)
-        })
-      })
+          assert.strictEqual(parentComponent.element.textContent, 'B');
+          assert.notStrictEqual(parentComponent.element.firstChild, initialChildElement);
+        });
+      });
 
       describe('if components are reordered', () => {
         it('builds a new component instance and replaces the previous element with its element', async () => {
           class ChildComponentA {
-            constructor () {
-              this.updateCalled = false
-              etch.initialize(this)
+            constructor() {
+              this.updateCalled = false;
+              etch.initialize(this);
             }
 
-            render () {
-              return <div>A</div>
+            render() {
+              return etch.dom("div", null, "A");
             }
 
-            update () {
-              this.updateCalled = true
+            update() {
+              this.updateCalled = true;
             }
           }
 
           class ChildComponentB {
-            constructor () {
-              this.updateCalled = false
-              etch.initialize(this)
+            constructor() {
+              this.updateCalled = false;
+              etch.initialize(this);
             }
 
-            render () {
-              return <div>B</div>
+            render() {
+              return etch.dom("div", null, "B");
             }
 
-            update () {
-              this.updateCalled = true
+            update() {
+              this.updateCalled = true;
             }
           }
 
           let parentComponent = {
             condition: true,
 
-            render () {
+            render() {
               if (this.condition) {
                 return (
-                  <div>
-                    <ChildComponentA key='a' ref='a' />
-                    <ChildComponentB key='b' ref='b' />
-                  </div>
-                )
+                  etch.dom("div", null,
+                  etch.dom(ChildComponentA, { key: "a", ref: "a" }),
+                  etch.dom(ChildComponentB, { key: "b", ref: "b" })
+                  ));
+
               } else {
                 return (
-                  <div>
-                    <ChildComponentB key='b' ref='b' />
-                    <ChildComponentA key='a' ref='a' />
-                  </div>
-                )
+                  etch.dom("div", null,
+                  etch.dom(ChildComponentB, { key: "b", ref: "b" }),
+                  etch.dom(ChildComponentA, { key: "a", ref: "a" })
+                  ));
+
               }
             },
 
-            update () {}
-          }
+            update() {}
+          };
 
-          etch.initialize(parentComponent)
-          let element = parentComponent.element
-          let childComponentA = parentComponent.refs.a
-          let childComponentB = parentComponent.refs.b
-          let childElementA = element.children[0]
-          let childElementB = element.children[1]
-          expect(childComponentA.updateCalled).to.be.false
-          expect(childComponentB.updateCalled).to.be.false
+          etch.initialize(parentComponent);
+          let element = parentComponent.element;
+          let childComponentA = parentComponent.refs.a;
+          let childComponentB = parentComponent.refs.b;
+          let childElementA = element.children[0];
+          let childElementB = element.children[1];
+          assert.strictEqual(childComponentA.updateCalled, false);
+          assert.strictEqual(childComponentB.updateCalled, false);
 
-          parentComponent.condition = false
-          await etch.update(parentComponent)
+          parentComponent.condition = false;
+          await etch.update(parentComponent);
 
-          expect(element.children[0]).to.equal(childElementB)
-          expect(element.children[1]).to.equal(childElementA)
-          expect(parentComponent.refs.a).to.equal(childComponentA)
-          expect(parentComponent.refs.a.element).to.equal(childElementA)
-          expect(parentComponent.refs.b).to.equal(childComponentB)
-          expect(parentComponent.refs.b.element).to.equal(childElementB)
-          expect(childComponentA.updateCalled).to.be.true
-          expect(childComponentB.updateCalled).to.be.true
-        })
-      })
-    })
+          assert.strictEqual(element.children[0], childElementB);
+          assert.strictEqual(element.children[1], childElementA);
+          assert.strictEqual(parentComponent.refs.a, childComponentA);
+          assert.strictEqual(parentComponent.refs.a.element, childElementA);
+          assert.strictEqual(parentComponent.refs.b, childComponentB);
+          assert.strictEqual(parentComponent.refs.b.element, childElementB);
+          assert.strictEqual(childComponentA.updateCalled, true);
+          assert.strictEqual(childComponentB.updateCalled, true);
+        });
+      });
+    });
 
     describe('when the child component constructor tag has a ref property', () => {
       it('creates a reference to the child component object on the parent component', async () => {
         class ChildComponentA {
-          constructor (properties) {
-            this.properties = properties
-            etch.initialize(this)
+          constructor(properties) {
+            this.properties = properties;
+            etch.initialize(this);
           }
 
-          render () {
-            return <div ref='self'>A</div>
+          render() {
+            return etch.dom("div", { ref: "self" }, "A");
           }
 
-          update (properties) {
-            this.properties = properties
+          update(properties) {
+            this.properties = properties;
           }
         }
 
         class ChildComponentB {
-          constructor (properties) {
-            this.properties = properties
-            etch.initialize(this)
+          constructor(properties) {
+            this.properties = properties;
+            etch.initialize(this);
           }
 
-          render () {
-            return <div ref='self'>B</div>
+          render() {
+            return etch.dom("div", { ref: "self" }, "B");
           }
 
-          update () {}
+          update() {}
         }
 
         let parentComponent = {
           renderA: true,
           refName: 'child',
 
-          render () {
+          render() {
             if (this.renderA) {
-              return <div><ChildComponentA ref={this.refName} /></div>
+              return etch.dom("div", null, etch.dom(ChildComponentA, { ref: this.refName }));
             } else if (this.renderB) {
-              return <div><ChildComponentB ref={this.refName} /></div>
+              return etch.dom("div", null, etch.dom(ChildComponentB, { ref: this.refName }));
             } else {
-              return <div />
+              return etch.dom("div", null);
             }
           },
 
-          update () {}
-        }
+          update() {}
+        };
 
-        etch.initialize(parentComponent)
+        etch.initialize(parentComponent);
 
-        expect(parentComponent.refs.child instanceof ChildComponentA).to.be.true
-        expect(parentComponent.refs.child.properties.ref).to.equal('child')
-        expect(parentComponent.refs.child.refs.self.textContent).to.equal('A')
+        assert.strictEqual(parentComponent.refs.child instanceof ChildComponentA, true);
+        assert.strictEqual(parentComponent.refs.child.properties.ref, 'child');
+        assert.strictEqual(parentComponent.refs.child.refs.self.textContent, 'A');
 
-        parentComponent.refName = 'kid'
-        await etch.update(parentComponent)
+        parentComponent.refName = 'kid';
+        await etch.update(parentComponent);
 
-        expect(parentComponent.refs.child).to.be.undefined
-        expect(parentComponent.refs.kid instanceof ChildComponentA).to.be.true
-        expect(parentComponent.refs.kid.properties.ref).to.equal('kid')
-        expect(parentComponent.refs.kid.refs.self.textContent).to.equal('A')
+        assert.strictEqual(parentComponent.refs.child, undefined);
+        assert.strictEqual(parentComponent.refs.kid instanceof ChildComponentA, true);
+        assert.strictEqual(parentComponent.refs.kid.properties.ref, 'kid');
+        assert.strictEqual(parentComponent.refs.kid.refs.self.textContent, 'A');
 
-        parentComponent.refName = 'child'
-        parentComponent.renderA = false
-        parentComponent.renderB = true
-        await etch.update(parentComponent)
+        parentComponent.refName = 'child';
+        parentComponent.renderA = false;
+        parentComponent.renderB = true;
+        await etch.update(parentComponent);
 
-        expect(parentComponent.refs.kid).to.be.undefined
-        expect(parentComponent.refs.child instanceof ChildComponentB).to.be.true
-        expect(parentComponent.refs.child.properties.ref).to.equal('child')
-        expect(parentComponent.refs.child.refs.self.textContent).to.equal('B')
+        assert.strictEqual(parentComponent.refs.kid, undefined);
+        assert.strictEqual(parentComponent.refs.child instanceof ChildComponentB, true);
+        assert.strictEqual(parentComponent.refs.child.properties.ref, 'child');
+        assert.strictEqual(parentComponent.refs.child.refs.self.textContent, 'B');
 
-        parentComponent.renderB = false
-        await etch.update(parentComponent)
-        expect('child' in parentComponent.refs).to.be.false
-      })
+        parentComponent.renderB = false;
+        await etch.update(parentComponent);
+        assert.strictEqual('child' in parentComponent.refs, false);
+      });
 
       it('does not delete a reference to a different component when a component is destroyed', async function () {
         class ChildComponentA {
-          constructor () {
-            etch.initialize(this)
+          constructor() {
+            etch.initialize(this);
           }
 
-          render () {
-            return <div>A</div>
+          render() {
+            return etch.dom("div", null, "A");
           }
 
-          update (properties) {}
+          update(properties) {}
         }
 
         class ChildComponentB {
-          constructor () {
-            etch.initialize(this)
+          constructor() {
+            etch.initialize(this);
           }
 
-          render () {
-            return <div>B</div>
+          render() {
+            return etch.dom("div", null, "B");
           }
 
-          update () {}
+          update() {}
         }
 
         let parentComponent = {
           condition: true,
 
-          render () {
+          render() {
             if (this.condition) {
               return (
-                <div>
-                  <div />
-                  <ChildComponentA ref='child' />
-                </div>
-              )
+                etch.dom("div", null,
+                etch.dom("div", null),
+                etch.dom(ChildComponentA, { ref: "child" })
+                ));
+
             } else {
               return (
-                <div>
-                  <ChildComponentB ref='child' />
-                </div>
-              )
+                etch.dom("div", null,
+                etch.dom(ChildComponentB, { ref: "child" })
+                ));
+
             }
           },
 
-          update () {}
-        }
+          update() {}
+        };
 
-        etch.initialize(parentComponent)
-        parentComponent.condition = false
-        await etch.update(parentComponent)
-        expect(parentComponent.refs.child).to.not.be.undefined
-        expect(parentComponent.refs.child.constructor).to.equal(ChildComponentB)
-      })
-    })
-  })
-})
+        etch.initialize(parentComponent);
+        parentComponent.condition = false;
+        await etch.update(parentComponent);
+        assert.notStrictEqual(parentComponent.refs.child, undefined);
+        assert.strictEqual(parentComponent.refs.child.constructor, ChildComponentB);
+      });
+    });
+  });
+});
