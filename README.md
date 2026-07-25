@@ -1,4 +1,4 @@
-# @lumine-code/etch
+# etch
 
 Perform virtual DOM updates based on changes to a data model.
 
