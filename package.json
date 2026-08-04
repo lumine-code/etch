@@ -1,6 +1,6 @@
 {
   "name": "@lumine-code/etch",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Perform virtual DOM updates based on changes to a data model.",
   "author": "lumine-code",
   "keywords": [

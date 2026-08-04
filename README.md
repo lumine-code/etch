@@ -13,6 +13,7 @@ Etch is a library for writing HTML-based user interface components that provides
 - **References**: `ref` properties collect DOM nodes and child components into a `refs` object, as strings or callback functions.
 - **Event binding**: `on` objects and `onClick`-style properties attach listeners bound to the component.
 - **Keyed lists**: `key` properties enable minimal reordering of frequently changing lists.
+- **Fragments**: `etch.Fragment` groups sibling children without adding an element to wrap them.
 - **Pluggable scheduler**: DOM read/write coordination can be delegated to a host application scheduler such as `atom.views`.
 - **SVG support**: SVG tags render in the proper namespace with attribute-name translation.
 
@@ -82,6 +83,8 @@ await component.destroy()
 Note that using an Etch component does not require a reference to the Etch library. Etch is an implementation detail, and from the outside the component is just an ordinary object with a simple interface and an `.element` property. You can also take a more declarative approach by embedding Etch components directly within other Etch components, covered later in this document.
 
 Virtual DOM trees can also be written without JSX by calling the `etch.dom` helper directly: `etch.dom('div', {className: 'foo'}, children...)`, or via the tag shorthand `etch.dom.div({className: 'foo'}, children...)`. Children given as `null` or `false` are skipped, so conditional rendering like `{condition && <div />}` works as expected.
+
+To group siblings without wrapping them in an element, use `etch.Fragment`, which JSX writes as `<>…</>` when the compiler's fragment factory points at it. Its children are spliced into the enclosing element, so a fragment cannot be what a component renders at its root — `render` must still return a single element.
 
 ## API
 
