@@ -36,6 +36,6 @@
     "test:syntax": "node --check lib/index.js && node --check lib/dom.js && node --check lib/render.js && node --check lib/patch.js && node --check lib/update-props.js && node --check lib/component-helpers.js && node --check lib/default-scheduler.js && node --check lib/scheduler-assignment.js && node --check lib/update-ref.js && node --check lib/event-listener-props.js && node --check lib/svg-attribute-translations.js && node --check lib/svg-tags.js"
   },
   "devDependencies": {
-    "jsdom": "^29.1.1"
+    "jsdom": "^30.0.1"
   }
 }
