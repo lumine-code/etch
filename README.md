@@ -30,35 +30,35 @@ Etch components are ordinary JavaScript objects that conform to a minimal interf
 ```js
 /** @jsx etch.dom */
 
-const etch = require('@lumine-code/etch')
+const etch = require("@lumine-code/etch");
 
 class MyComponent {
   // Required: Define an ordinary constructor to initialize your component.
-  constructor (props, children) {
+  constructor(props, children) {
     // perform custom initialization here...
     // then call `etch.initialize`:
-    etch.initialize(this)
+    etch.initialize(this);
   }
 
   // Required: The `render` method returns a virtual DOM tree representing the
   // current state of the component. Etch will call `render` to build and update
   // the component's associated DOM element. Babel is instructed to call the
   // `etch.dom` helper in compiled JSX expressions by the `@jsx` pragma above.
-  render () {
-    return <div></div>
+  render() {
+    return <div></div>;
   }
 
   // Required: Update the component with new properties and children.
-  update (props, children) {
+  update(props, children) {
     // perform custom update logic here...
     // then call `etch.update`, which is async and returns a promise
-    return etch.update(this)
+    return etch.update(this);
   }
 
   // Optional: Destroy the component. Async/await syntax is pretty but optional.
-  async destroy () {
+  async destroy() {
     // call etch.destroy to remove the element and destroy child components
-    await etch.destroy(this)
+    await etch.destroy(this);
     // then perform custom teardown logic here...
   }
 }
@@ -68,16 +68,16 @@ The component defined above could be used as follows:
 
 ```js
 // build a component instance in a standard way...
-let component = new MyComponent({foo: 1, bar: 2})
+let component = new MyComponent({ foo: 1, bar: 2 });
 
 // use the component's associated DOM element however you wish...
-document.body.appendChild(component.element)
+document.body.appendChild(component.element);
 
 // update the component as needed...
-await component.update({bar: 2})
+await component.update({ bar: 2 });
 
 // destroy the component when done...
-await component.destroy()
+await component.destroy();
 ```
 
 Note that using an Etch component does not require a reference to the Etch library. Etch is an implementation detail, and from the outside the component is just an ordinary object with a simple interface and an `.element` property. You can also take a more declarative approach by embedding Etch components directly within other Etch components, covered later in this document.
@@ -101,21 +101,21 @@ This function is typically called at the end of your component's constructor:
 ```js
 /** @jsx etch.dom */
 
-const etch = require('@lumine-code/etch')
+const etch = require("@lumine-code/etch");
 
 class MyComponent {
-  constructor (properties) {
-    this.properties = properties
-    etch.initialize(this)
+  constructor(properties) {
+    this.properties = properties;
+    etch.initialize(this);
   }
 
-  render () {
-    return <div>{this.properties.greeting} World!</div>
+  render() {
+    return <div>{this.properties.greeting} World!</div>;
   }
 }
 
-let component = new MyComponent({greeting: 'Hello'})
-console.log(component.element.outerHTML) // ==> <div>Hello World!</div>
+let component = new MyComponent({ greeting: "Hello" });
+console.log(component.element.outerHTML); // ==> <div>Hello World!</div>
 ```
 
 #### `etch.update(component[, replaceNode])`
@@ -129,34 +129,34 @@ This function takes a component that is already associated with an `.element` pr
 ```js
 /** @jsx etch.dom */
 
-const etch = require('@lumine-code/etch')
+const etch = require("@lumine-code/etch");
 
 class MyComponent {
-  constructor (properties) {
-    this.properties = properties
-    etch.initialize(this)
+  constructor(properties) {
+    this.properties = properties;
+    etch.initialize(this);
   }
 
-  render () {
-    return <div>{this.properties.greeting} World!</div>
+  render() {
+    return <div>{this.properties.greeting} World!</div>;
   }
 
-  update (newProperties) {
+  update(newProperties) {
     if (this.properties.greeting !== newProperties.greeting) {
-      this.properties.greeting = newProperties.greeting
-      return etch.update(this)
+      this.properties.greeting = newProperties.greeting;
+      return etch.update(this);
     } else {
-      return Promise.resolve()
+      return Promise.resolve();
     }
   }
 }
 
 // in an async function...
 
-let component = new MyComponent({greeting: 'Hello'})
-console.log(component.element.outerHTML) // ==> <div>Hello World!</div>
-await component.update({greeting: 'Salutations'})
-console.log(component.element.outerHTML) // ==> <div>Salutations World!</div>
+let component = new MyComponent({ greeting: "Hello" });
+console.log(component.element.outerHTML); // ==> <div>Hello World!</div>
+await component.update({ greeting: "Salutations" });
+console.log(component.element.outerHTML); // ==> <div>Salutations World!</div>
 ```
 
 There is also a synchronous variant, `etch.updateSync`, which performs the DOM update immediately. It doesn't skip redundant updates or batch together with other component updates, so you shouldn't really use it unless you have a clear reason.
@@ -165,11 +165,11 @@ There is also a synchronous variant, `etch.updateSync`, which performs the DOM u
 
 If you need to perform imperative DOM interactions in addition to the declarative updates provided by Etch, you can integrate your imperative code via update hooks on the component. To ensure good performance, it's important that you segregate DOM reads and writes in the appropriate hook.
 
-- `writeAfterUpdate`: if you need to *write* to any part of the document as a result of updating your component, you should perform these writes in an optional `writeAfterUpdate` method defined on your component. Be warned: if you read from the DOM inside this method, it could potentially lead to layout thrashing by interleaving your reads with DOM writes associated with other components.
+- `writeAfterUpdate`: if you need to _write_ to any part of the document as a result of updating your component, you should perform these writes in an optional `writeAfterUpdate` method defined on your component. Be warned: if you read from the DOM inside this method, it could potentially lead to layout thrashing by interleaving your reads with DOM writes associated with other components.
 
-- `readAfterUpdate`: if you need to *read* any part of the document as a result of updating your component, you should perform these reads in an optional `readAfterUpdate` method defined on your component. You should avoid writing to the DOM in these methods, because writes could interleave with reads performed in `readAfterUpdate` hooks defined on other components. If you need to update the DOM as a result of your reads, store state on your component and request an additional update via `etch.update`.
+- `readAfterUpdate`: if you need to _read_ any part of the document as a result of updating your component, you should perform these reads in an optional `readAfterUpdate` method defined on your component. You should avoid writing to the DOM in these methods, because writes could interleave with reads performed in `readAfterUpdate` hooks defined on other components. If you need to update the DOM as a result of your reads, store state on your component and request an additional update via `etch.update`.
 
-These hooks exist to support DOM reads and writes in response to Etch updating your component's element. If you want your hook to run code based on changes to the component's *logical* state, you can make those calls directly or via other mechanisms. For example, if you simply want to call an external API when a property on your component changes, you should move that logic into the `update` method.
+These hooks exist to support DOM reads and writes in response to Etch updating your component's element. If you want your hook to run code based on changes to the component's _logical_ state, you can make those calls directly or via other mechanisms. For example, if you simply want to call an external API when a property on your component changes, you should move that logic into the `update` method.
 
 #### `etch.destroy(component[, removeNode])`
 
@@ -181,22 +181,22 @@ When you no longer need a component, pass it to `etch.destroy`. This function wi
 class MyComponent {
   // other methods omitted for brevity...
 
-  async destroy () {
-    await etch.destroy(this)
+  async destroy() {
+    await etch.destroy(this);
 
     // perform component teardown... here we just log for example purposes
-    let greeting = this.properties.greeting
-    console.log(`Destroyed component with greeting ${greeting}`)
+    let greeting = this.properties.greeting;
+    console.log(`Destroyed component with greeting ${greeting}`);
   }
 }
 
 // in an async function...
 
-let component = new MyComponent({greeting: 'Hello'})
-document.body.appendChild(component.element)
-assert(component.element.parentElement)
-await component.destroy()
-assert(!component.element.parentElement)
+let component = new MyComponent({ greeting: "Hello" });
+document.body.appendChild(component.element);
+assert(component.element.parentElement);
+await component.destroy();
+assert(!component.element.parentElement);
 ```
 
 There is also a synchronous variant, `etch.destroySync`, which removes the element and destroys child components immediately.
@@ -210,30 +210,30 @@ Components can be nested within other components by referencing a child componen
 ```js
 /** @jsx etch.dom */
 
-const etch = require('@lumine-code/etch')
+const etch = require("@lumine-code/etch");
 
 class ChildComponent {
-  constructor () {
-    etch.initialize(this)
+  constructor() {
+    etch.initialize(this);
   }
 
-  render () {
-    return <h2>I am a child</h2>
+  render() {
+    return <h2>I am a child</h2>;
   }
 }
 
 class ParentComponent {
-  constructor () {
-    etch.initialize(this)
+  constructor() {
+    etch.initialize(this);
   }
 
-  render () {
+  render() {
     return (
       <div>
         <h1>I am a parent</h1>
         <ChildComponent />
       </div>
-    )
+    );
   }
 }
 ```
@@ -243,41 +243,41 @@ A constructor function can always take the place of a tag name in any Etch JSX e
 ```js
 /** @jsx etch.dom */
 
-const etch = require('@lumine-code/etch')
+const etch = require("@lumine-code/etch");
 
 class ChildComponent {
-  constructor (properties, children) {
-    this.properties = properties
-    this.children = children
-    etch.initialize(this)
+  constructor(properties, children) {
+    this.properties = properties;
+    this.children = children;
+    etch.initialize(this);
   }
 
-  render () {
+  render() {
     return (
       <div>
         <h2>I am a {this.properties.adjective} child</h2>
         <h2>And these are *my* children:</h2>
         {this.children}
       </div>
-    )
+    );
   }
 }
 
 class ParentComponent {
-  constructor () {
-    etch.initialize(this)
+  constructor() {
+    etch.initialize(this);
   }
 
-  render () {
+  render() {
     return (
       <div>
         <h1>I am a parent</h1>
-        <ChildComponent adjective='good'>
+        <ChildComponent adjective="good">
           <div>Grandchild 1</div>
           <div>Grandchild 2</div>
         </ChildComponent>
       </div>
-    )
+    );
   }
 }
 ```
@@ -294,7 +294,7 @@ This feature makes it easy to mix components written in different versions of Et
 
 To keep DOM update times linear in the size of the virtual tree, Etch applies a very simple strategy when updating lists of elements. By default, if a child at a given location has the same tag name in both the previous and current virtual DOM tree, Etch proceeds to apply updates for the entire subtree.
 
-If your virtual DOM contains a list into which you are inserting and removing elements frequently, you can associate each element in the list with a unique `key` property to identify it. This improves performance by allowing Etch to determine whether a given element tree should be *inserted* as a new DOM node, or whether it corresponds to a node that already exists that needs to be *updated*.
+If your virtual DOM contains a list into which you are inserting and removing elements frequently, you can associate each element in the list with a unique `key` property to identify it. This improves performance by allowing Etch to determine whether a given element tree should be _inserted_ as a new DOM node, or whether it corresponds to a node that already exists that needs to be _updated_.
 
 ### References
 
@@ -302,23 +302,23 @@ Etch interprets any `ref` property on a virtual DOM element as an instruction to
 
 ```js
 class ParentComponent {
-  constructor () {
-    etch.initialize(this)
+  constructor() {
+    etch.initialize(this);
   }
 
-  render () {
+  render() {
     return (
       <div>
-        <span ref='greetingSpan'>Hello</span>
-        <ChildComponent ref='childComponent' />
+        <span ref="greetingSpan">Hello</span>
+        <ChildComponent ref="childComponent" />
       </div>
-    )
+    );
   }
 }
 
-let component = new ParentComponent()
-component.refs.greetingSpan // This is a span DOM node
-component.refs.childComponent // This is a ChildComponent instance
+let component = new ParentComponent();
+component.refs.greetingSpan; // This is a span DOM node
+component.refs.childComponent; // This is a ChildComponent instance
 ```
 
 Note that `ref` properties on normal HTML elements create references to raw DOM nodes, while `ref` properties on child components create references to the constructed component object, which makes its DOM node available via its `element` property.
@@ -329,22 +329,22 @@ Etch supports listening to arbitrary events on DOM nodes via the special `on` pr
 
 ```js
 class ComponentWithEvents {
-  constructor () {
-    etch.initialize(this)
+  constructor() {
+    etch.initialize(this);
   }
 
-  render () {
-    return <div on={{click: this.didClick, focus: this.didFocus}} />
+  render() {
+    return <div on={{ click: this.didClick, focus: this.didFocus }} />;
   }
 
-  didClick (event) {
-    console.log(event) // ==> MouseEvent {...}
-    console.log(this) // ==> ComponentWithEvents {...}
+  didClick(event) {
+    console.log(event); // ==> MouseEvent {...}
+    console.log(this); // ==> ComponentWithEvents {...}
   }
 
-  didFocus (event) {
-    console.log(event) // ==> FocusEvent {...}
-    console.log(this) // ==> ComponentWithEvents {...}
+  didFocus(event) {
+    console.log(event); // ==> FocusEvent {...}
+    console.log(this); // ==> ComponentWithEvents {...}
   }
 }
 ```
@@ -353,11 +353,11 @@ As you can see, the listener function's `this` value is automatically bound to t
 
 ### Assigning DOM attributes
 
-With the exception of SVG elements, Etch assigns *properties* on DOM nodes rather than HTML attributes. If you want to bypass this behavior and assign attributes instead, use the special `attributes` property with a nested object. For example, `a` and `b` below will yield the equivalent DOM node.
+With the exception of SVG elements, Etch assigns _properties_ on DOM nodes rather than HTML attributes. If you want to bypass this behavior and assign attributes instead, use the special `attributes` property with a nested object. For example, `a` and `b` below will yield the equivalent DOM node.
 
 ```js
-const a = <div className='foo' />
-const b = <div attributes={{class: 'foo'}} />
+const a = <div className="foo" />;
+const b = <div attributes={{ class: "foo" }} />;
 ```
 
 This can be useful for custom attributes that don't map to DOM node properties. The `dataset` and `style` properties may likewise be assigned nested objects, which are diffed key by key.
@@ -372,19 +372,19 @@ If your component's HTML is based solely on properties passed in from the outsid
 
 ```js
 class ControlledComponent {
-  constructor (props) {
-    this.props = props
-    etch.initialize(this)
+  constructor(props) {
+    this.props = props;
+    etch.initialize(this);
   }
 
-  render () {
+  render() {
     // read from this.props here
   }
 
-  update (props) {
+  update(props) {
     // you could avoid redundant updates by comparing this.props with props...
-    this.props = props
-    return etch.update(this)
+    this.props = props;
+    return etch.update(this);
   }
 }
 ```
@@ -397,26 +397,24 @@ If your `render` method's output is based on state managed within the component 
 
 ```js
 class StatefulComponent {
-  constructor () {
-    this.counter = 0
-    etch.initialize(this)
+  constructor() {
+    this.counter = 0;
+    etch.initialize(this);
   }
 
-  render () {
+  render() {
     return (
       <div>
         <span>{this.counter}</span>
-        <button onClick={() => this.incrementCounter()}>
-          Increment Counter
-        </button>
+        <button onClick={() => this.incrementCounter()}>Increment Counter</button>
       </div>
-    )
+    );
   }
 
-  incrementCounter () {
-    this.counter++
+  incrementCounter() {
+    this.counter++;
     // since we updated state we use in render, call etch.update
-    return etch.update(this)
+    return etch.update(this);
   }
 }
 ```
@@ -428,7 +426,7 @@ Etch exports a `setScheduler` method that allows you to override the scheduler i
 For example, when using Etch in Lumine, you should set the scheduler as follows:
 
 ```js
-etch.setScheduler(atom.views)
+etch.setScheduler(atom.views);
 ```
 
 Read comments in the [scheduler assignment][scheduler-assignment] and [default scheduler][default-scheduler] source code for more information on implementing your own scheduler.

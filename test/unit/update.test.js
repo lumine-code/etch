@@ -1,33 +1,33 @@
-const { describe, it } = require('node:test');
-const assert = require('node:assert');
+const { describe, it } = require("node:test");
+const assert = require("node:assert");
 
-require('../helpers/setup');
+require("../helpers/setup");
 
-const etch = require('../../lib/index');
+const etch = require("../../lib/index");
 
-describe('etch.update(component)', () => {
-  it('schedules an update of the element associated with the component', async () => {
+describe("etch.update(component)", () => {
+  it("schedules an update of the element associated with the component", async () => {
     let component = {
-      greeting: 'Hello',
+      greeting: "Hello",
 
       render() {
         return etch.dom("div", null, this.greeting, " World");
       },
 
-      update() {}
+      update() {},
     };
 
     etch.initialize(component);
-    assert.strictEqual(component.element.textContent, 'Hello World');
+    assert.strictEqual(component.element.textContent, "Hello World");
 
-    component.greeting = 'Goodbye';
+    component.greeting = "Goodbye";
 
     await etch.update(component);
 
-    assert.strictEqual(component.element.textContent, 'Goodbye World');
+    assert.strictEqual(component.element.textContent, "Goodbye World");
   });
 
-  it('updates individual compontents no more than once in a given update cycle', async () => {
+  it("updates individual compontents no more than once in a given update cycle", async () => {
     let componentA = {
       renderCount: 0,
 
@@ -36,7 +36,7 @@ describe('etch.update(component)', () => {
         return etch.dom("div", null);
       },
 
-      update() {}
+      update() {},
     };
 
     let componentB = {
@@ -47,7 +47,7 @@ describe('etch.update(component)', () => {
         return etch.dom("div", null);
       },
 
-      update() {}
+      update() {},
     };
 
     etch.initialize(componentA);
@@ -62,7 +62,7 @@ describe('etch.update(component)', () => {
     assert.strictEqual(componentB.renderCount, 2);
   });
 
-  it('updates references to DOM elements', async () => {
+  it("updates references to DOM elements", async () => {
     let component = {
       condition: true,
 
@@ -74,21 +74,21 @@ describe('etch.update(component)', () => {
         }
       },
 
-      update() {}
+      update() {},
     };
     etch.initialize(component);
 
-    assert.strictEqual(component.refs.greeting.textContent, 'Hello');
+    assert.strictEqual(component.refs.greeting.textContent, "Hello");
     assert.strictEqual(component.refs.greeted, undefined);
 
     component.condition = false;
     await etch.update(component);
 
-    assert.strictEqual(component.refs.greeted.textContent, 'World');
+    assert.strictEqual(component.refs.greeted.textContent, "World");
     assert.strictEqual(component.refs.greeting, undefined);
   });
 
-  it('calls the destroy method on removed child components if it is present', async () => {
+  it("calls the destroy method on removed child components if it is present", async () => {
     let destroyCalls = [];
 
     class ParentComponent {
@@ -99,12 +99,12 @@ describe('etch.update(component)', () => {
 
       render() {
         if (this.renderChildren) {
-          return (
-            etch.dom("div", null,
+          return etch.dom(
+            "div",
+            null,
             etch.dom(ChildComponent, { ref: "child" }),
-            etch.dom(ChildComponentWithNoDestroyMethod, { ref: "childWithNoDestroyMethod" })
-            ));
-
+            etch.dom(ChildComponentWithNoDestroyMethod, { ref: "childWithNoDestroyMethod" }),
+          );
         } else {
           return etch.dom("div", null);
         }
@@ -173,10 +173,10 @@ describe('etch.update(component)', () => {
     await etch.update(parent);
 
     assert.deepStrictEqual(destroyCalls, [grandchild, child]);
-    assert.strictEqual(parent.element.innerHTML, '');
+    assert.strictEqual(parent.element.innerHTML, "");
   });
 
-  it('replaces the DOM node when the top-level node type is changed during render', () => {
+  it("replaces the DOM node when the top-level node type is changed during render", () => {
     class Component {
       constructor() {
         this.renderDiv = true;
@@ -198,19 +198,19 @@ describe('etch.update(component)', () => {
     }
 
     const component = new Component();
-    const parent = document.createElement('div');
+    const parent = document.createElement("div");
     parent.appendChild(component.element);
 
-    assert.strictEqual(component.element.tagName, 'DIV');
+    assert.strictEqual(component.element.tagName, "DIV");
     assert.strictEqual(parent.firstChild, component.element);
 
     component.update({ renderDiv: false });
-    assert.strictEqual(component.element.tagName, 'SPAN');
+    assert.strictEqual(component.element.tagName, "SPAN");
     assert.strictEqual(parent.firstChild, component.element);
   });
 
-  describe('when passing false as the second argument', () => {
-    it('throws when attempting to change the top-level node type', () => {
+  describe("when passing false as the second argument", () => {
+    it("throws when attempting to change the top-level node type", () => {
       class Component {
         constructor() {
           this.renderDiv = true;
@@ -237,7 +237,7 @@ describe('etch.update(component)', () => {
     });
   });
 
-  it('calls writeAfterUpdate and readAfterUpdate hooks at the appropriate times', async () => {
+  it("calls writeAfterUpdate and readAfterUpdate hooks at the appropriate times", async () => {
     let events = [];
 
     class ParentComponent {
@@ -246,11 +246,7 @@ describe('etch.update(component)', () => {
       }
 
       render() {
-        return (
-          etch.dom("div", null,
-          etch.dom(ChildComponent, null)
-          ));
-
+        return etch.dom("div", null, etch.dom(ChildComponent, null));
       }
 
       update() {
@@ -258,11 +254,11 @@ describe('etch.update(component)', () => {
       }
 
       writeAfterUpdate() {
-        events.push('parent-write');
+        events.push("parent-write");
       }
 
       readAfterUpdate() {
-        events.push('parent-read');
+        events.push("parent-read");
       }
     }
 
@@ -280,11 +276,11 @@ describe('etch.update(component)', () => {
       }
 
       writeAfterUpdate() {
-        events.push('child-write');
+        events.push("child-write");
       }
 
       readAfterUpdate() {
-        events.push('child-read');
+        events.push("child-read");
       }
     }
 
@@ -293,6 +289,6 @@ describe('etch.update(component)', () => {
 
     await etch.update(parent);
 
-    assert.deepStrictEqual(events, ['child-write', 'parent-write', 'child-read', 'parent-read']);
+    assert.deepStrictEqual(events, ["child-write", "parent-write", "child-read", "parent-read"]);
   });
 });

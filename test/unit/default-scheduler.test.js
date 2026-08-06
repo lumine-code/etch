@@ -1,19 +1,19 @@
-const { describe, it, beforeEach } = require('node:test');
-const assert = require('node:assert');
+const { describe, it, beforeEach } = require("node:test");
+const assert = require("node:assert");
 
-require('../helpers/setup');
+require("../helpers/setup");
 
-const DefaultScheduler = require('../../lib/default-scheduler');
+const DefaultScheduler = require("../../lib/default-scheduler");
 
-describe('DefaultScheduler', () => {
+describe("DefaultScheduler", () => {
   let scheduler;
 
   beforeEach(() => {
     scheduler = new DefaultScheduler();
   });
 
-  describe('.prototype.updateDocument(fn)', () => {
-    it('performs all update requests on the next animation frame', async () => {
+  describe(".prototype.updateDocument(fn)", () => {
+    it("performs all update requests on the next animation frame", async () => {
       let events = [];
       scheduler.updateDocument(() => events.push(1));
       scheduler.updateDocument(() => events.push(2));
@@ -26,7 +26,7 @@ describe('DefaultScheduler', () => {
       assert.deepStrictEqual(events, [1, 2, 3]);
     });
 
-    it('performs update requests that occur during another update in the same animation frame', async () => {
+    it("performs update requests that occur during another update in the same animation frame", async () => {
       let events = [];
       scheduler.updateDocument(() => {
         events.push(1);
@@ -46,38 +46,38 @@ describe('DefaultScheduler', () => {
     });
   });
 
-  describe('.prototype.readDocument', () => {
-    describe('when document updates are pending', () => {
-      it('defers all requested reads until all requested updates are completed', async () => {
+  describe(".prototype.readDocument", () => {
+    describe("when document updates are pending", () => {
+      it("defers all requested reads until all requested updates are completed", async () => {
         let events = [];
 
-        scheduler.updateDocument(() => events.push('update 1'));
-        scheduler.readDocument(() => events.push('read 1'));
-        scheduler.updateDocument(() => events.push('update 2'));
-        scheduler.readDocument(() => events.push('read 2'));
+        scheduler.updateDocument(() => events.push("update 1"));
+        scheduler.readDocument(() => events.push("read 1"));
+        scheduler.updateDocument(() => events.push("update 2"));
+        scheduler.readDocument(() => events.push("read 2"));
 
         assert.deepStrictEqual(events, []);
 
         await new Promise(requestAnimationFrame);
 
-        assert.deepStrictEqual(events, ['update 1', 'update 2', 'read 1', 'read 2']);
+        assert.deepStrictEqual(events, ["update 1", "update 2", "read 1", "read 2"]);
       });
     });
 
-    describe('when document updates are in progress', () => {
-      it('defers all requested reads until all in-progress updates are completed', async () => {
+    describe("when document updates are in progress", () => {
+      it("defers all requested reads until all in-progress updates are completed", async () => {
         let events = [];
 
         scheduler.updateDocument(() => {
-          events.push('update 1');
+          events.push("update 1");
           scheduler.readDocument(() => {
-            events.push('read 1');
+            events.push("read 1");
           });
         });
         scheduler.updateDocument(() => {
-          events.push('update 2');
+          events.push("update 2");
           scheduler.readDocument(() => {
-            events.push('read 2');
+            events.push("read 2");
           });
         });
 
@@ -85,22 +85,22 @@ describe('DefaultScheduler', () => {
 
         await new Promise(requestAnimationFrame);
 
-        assert.deepStrictEqual(events, ['update 1', 'update 2', 'read 1', 'read 2']);
+        assert.deepStrictEqual(events, ["update 1", "update 2", "read 1", "read 2"]);
       });
     });
 
-    describe('when no document updates are pending or in progress', () => {
-      it('defers requested reads until the next animation frame for consistency', async () => {
+    describe("when no document updates are pending or in progress", () => {
+      it("defers requested reads until the next animation frame for consistency", async () => {
         let events = [];
 
-        scheduler.readDocument(() => events.push('read 1'));
-        scheduler.readDocument(() => events.push('read 2'));
+        scheduler.readDocument(() => events.push("read 1"));
+        scheduler.readDocument(() => events.push("read 2"));
 
         assert.deepStrictEqual(events, []);
 
         await new Promise(requestAnimationFrame);
 
-        assert.deepStrictEqual(events, ['read 1', 'read 2']);
+        assert.deepStrictEqual(events, ["read 1", "read 2"]);
       });
     });
   });

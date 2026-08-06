@@ -1,25 +1,27 @@
-const { describe, it } = require('node:test');
-const assert = require('node:assert');
+const { describe, it } = require("node:test");
+const assert = require("node:assert");
 
-require('../helpers/setup');
+require("../helpers/setup");
 
-const etch = require('../../lib/index');
+const etch = require("../../lib/index");
 
-describe('etch.updateSync(component)', () => {
-  it('performs an update of the component\'s element and any resulting child updates synchronously', () => {
+describe("etch.updateSync(component)", () => {
+  it("performs an update of the component's element and any resulting child updates synchronously", () => {
     class ParentComponent {
       constructor() {
-        this.greeting = 'Hello';
-        this.greeted = 'World';
+        this.greeting = "Hello";
+        this.greeted = "World";
         etch.initialize(this);
       }
 
       render() {
-        return (
-          etch.dom("div", null,
-          etch.dom(ChildComponent, { greeting: this.greeting }), " ", etch.dom("span", null, this.greeted)
-          ));
-
+        return etch.dom(
+          "div",
+          null,
+          etch.dom(ChildComponent, { greeting: this.greeting }),
+          " ",
+          etch.dom("span", null, this.greeted),
+        );
       }
 
       update() {}
@@ -42,14 +44,14 @@ describe('etch.updateSync(component)', () => {
     }
 
     let component = new ParentComponent();
-    assert.strictEqual(component.element.textContent, 'Hello World');
-    component.greeting = 'Goodnight';
-    component.greeted = 'Moon';
+    assert.strictEqual(component.element.textContent, "Hello World");
+    component.greeting = "Goodnight";
+    component.greeted = "Moon";
     etch.updateSync(component);
-    assert.strictEqual(component.element.textContent, 'Goodnight Moon');
+    assert.strictEqual(component.element.textContent, "Goodnight Moon");
   });
 
-  it('calls writeAfterUpdate and readAfterUpdate hooks at the appropriate times', async () => {
+  it("calls writeAfterUpdate and readAfterUpdate hooks at the appropriate times", async () => {
     let events = [];
 
     class ParentComponent {
@@ -58,11 +60,7 @@ describe('etch.updateSync(component)', () => {
       }
 
       render() {
-        return (
-          etch.dom("div", null,
-          etch.dom(ChildComponent, null)
-          ));
-
+        return etch.dom("div", null, etch.dom(ChildComponent, null));
       }
 
       update() {
@@ -70,11 +68,11 @@ describe('etch.updateSync(component)', () => {
       }
 
       writeAfterUpdate() {
-        events.push('parent-write');
+        events.push("parent-write");
       }
 
       readAfterUpdate() {
-        events.push('parent-read');
+        events.push("parent-read");
       }
     }
 
@@ -92,11 +90,11 @@ describe('etch.updateSync(component)', () => {
       }
 
       writeAfterUpdate() {
-        events.push('child-write');
+        events.push("child-write");
       }
 
       readAfterUpdate() {
-        events.push('child-read');
+        events.push("child-read");
       }
     }
 
@@ -105,15 +103,15 @@ describe('etch.updateSync(component)', () => {
 
     etch.updateSync(parent);
 
-    assert.deepStrictEqual(events, ['child-write', 'parent-write']);
+    assert.deepStrictEqual(events, ["child-write", "parent-write"]);
 
     // reads are deferred until the next frame to avoid DOM thrash
     await new Promise(requestAnimationFrame);
 
-    assert.deepStrictEqual(events, ['child-write', 'parent-write', 'child-read', 'parent-read']);
+    assert.deepStrictEqual(events, ["child-write", "parent-write", "child-read", "parent-read"]);
   });
 
-  it('relays updates to non-etch child components', function () {
+  it("relays updates to non-etch child components", function () {
     class ParentComponent {
       constructor({ greeting }) {
         this.greeting = greeting;
@@ -121,11 +119,7 @@ describe('etch.updateSync(component)', () => {
       }
 
       render() {
-        return (
-          etch.dom("div", null,
-          etch.dom(ChildComponent, { greeting: this.greeting })
-          ));
-
+        return etch.dom("div", null, etch.dom(ChildComponent, { greeting: this.greeting }));
       }
 
       update({ greeting }) {
@@ -136,7 +130,7 @@ describe('etch.updateSync(component)', () => {
 
     class ChildComponent {
       constructor({ greeting }) {
-        this.element = document.createElement('div');
+        this.element = document.createElement("div");
         this.element.textContent = greeting;
       }
 
@@ -145,14 +139,14 @@ describe('etch.updateSync(component)', () => {
       }
     }
 
-    let component = new ParentComponent({ greeting: 'Hello' });
-    assert.strictEqual(component.element.textContent, 'Hello');
+    let component = new ParentComponent({ greeting: "Hello" });
+    assert.strictEqual(component.element.textContent, "Hello");
 
-    component.update({ greeting: 'Goodbye' });
-    assert.strictEqual(component.element.textContent, 'Goodbye');
+    component.update({ greeting: "Goodbye" });
+    assert.strictEqual(component.element.textContent, "Goodbye");
   });
 
-  it('allows non-etch child components to change their element during updates', function () {
+  it("allows non-etch child components to change their element during updates", function () {
     class ParentComponent {
       constructor({ childNodeType }) {
         this.childNodeType = childNodeType;
@@ -160,11 +154,7 @@ describe('etch.updateSync(component)', () => {
       }
 
       render() {
-        return (
-          etch.dom("div", null,
-          etch.dom(ChildComponent, { nodeType: this.childNodeType })
-          ));
-
+        return etch.dom("div", null, etch.dom(ChildComponent, { nodeType: this.childNodeType }));
       }
 
       update({ childNodeType }) {
@@ -183,21 +173,21 @@ describe('etch.updateSync(component)', () => {
       }
     }
 
-    let component = new ParentComponent({ childNodeType: 'div' });
-    assert.strictEqual(component.element.firstChild.tagName, 'DIV');
+    let component = new ParentComponent({ childNodeType: "div" });
+    assert.strictEqual(component.element.firstChild.tagName, "DIV");
 
-    component.update({ childNodeType: 'span' });
-    assert.strictEqual(component.element.firstChild.tagName, 'SPAN');
+    component.update({ childNodeType: "span" });
+    assert.strictEqual(component.element.firstChild.tagName, "SPAN");
   });
 
-  it('throws a generic exception if undefined is returned from render in a component that is not a class instance', () => {
+  it("throws a generic exception if undefined is returned from render in a component that is not a class instance", () => {
     let renderItem = true;
     let component = {
       render() {
         return renderItem && etch.dom("div", null);
       },
 
-      update() {}
+      update() {},
     };
 
     etch.initialize(component);
@@ -207,7 +197,7 @@ describe('etch.updateSync(component)', () => {
     }, /invalid falsy value/);
   });
 
-  it('throws a class-specific exception if undefined is returned from render in a component that is a class instance', () => {
+  it("throws a class-specific exception if undefined is returned from render in a component that is a class instance", () => {
     let renderItem = true;
     class MyComponent {
       render() {
@@ -225,7 +215,7 @@ describe('etch.updateSync(component)', () => {
     }, /invalid falsy value.*in MyComponent/);
   });
 
-  it('throws a class-specific exception if the component instance does not have a valid virtualNode property', () => {
+  it("throws a class-specific exception if the component instance does not have a valid virtualNode property", () => {
     class MyComponent {
       render() {
         return etch.dom("div", null);
@@ -240,7 +230,7 @@ describe('etch.updateSync(component)', () => {
     }, /MyComponent instance is not associated with a valid virtualNode/);
   });
 
-  it('throws a class-specific exception if the component instance does not have an element property', () => {
+  it("throws a class-specific exception if the component instance does not have an element property", () => {
     class MyComponent {
       render() {
         return etch.dom("div", null);
@@ -257,7 +247,7 @@ describe('etch.updateSync(component)', () => {
     }, /MyComponent instance is not associated with a DOM element/);
   });
 
-  it('calls destroy on a replaced component', () => {
+  it("calls destroy on a replaced component", () => {
     let updated = false;
     let destroyed = false;
     class ComponentA {
@@ -267,7 +257,9 @@ describe('etch.updateSync(component)', () => {
 
       update() {}
 
-      render() {return etch.dom("div", null, "A");}
+      render() {
+        return etch.dom("div", null, "A");
+      }
 
       destroy() {
         destroyed = true;
@@ -282,23 +274,29 @@ describe('etch.updateSync(component)', () => {
 
       update() {}
 
-      render() {return etch.dom("div", null, "B");}
+      render() {
+        return etch.dom("div", null, "B");
+      }
     }
 
     let component = {
       render() {
-        if (updated) {return etch.dom(ComponentB, null);} else {return etch.dom(ComponentA, null);}
+        if (updated) {
+          return etch.dom(ComponentB, null);
+        } else {
+          return etch.dom(ComponentA, null);
+        }
       },
 
-      update() {}
+      update() {},
     };
 
     etch.initialize(component);
-    assert.strictEqual(component.element.textContent, 'A');
+    assert.strictEqual(component.element.textContent, "A");
     assert.strictEqual(destroyed, false);
     updated = true;
     etch.updateSync(component);
-    assert.strictEqual(component.element.textContent, 'B');
+    assert.strictEqual(component.element.textContent, "B");
     assert.strictEqual(destroyed, true);
   });
 });

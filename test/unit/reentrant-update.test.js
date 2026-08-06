@@ -1,9 +1,9 @@
-const { describe, it } = require('node:test');
-const assert = require('node:assert');
+const { describe, it } = require("node:test");
+const assert = require("node:assert");
 
-require('../helpers/setup');
+require("../helpers/setup");
 
-const etch = require('../../lib/index');
+const etch = require("../../lib/index");
 const $ = etch.dom;
 
 // The Data Explorer died in insertBefore because a child component's update()
@@ -21,7 +21,7 @@ class EchoChild {
   }
 
   render() {
-    return $('span', null, this.props.value);
+    return $("span", null, this.props.value);
   }
 
   update(props) {
@@ -40,15 +40,17 @@ class EchoChild {
   }
 }
 
-describe('reentrant update of a component mid-patch', () => {
-  it('defers the nested update instead of double-patching', () => {
+describe("reentrant update of a component mid-patch", () => {
+  it("defers the nested update instead of double-patching", () => {
     const parent = {
-      state: { value: 'first', message: true },
+      state: { value: "first", message: true },
       render() {
-        return $('div', null,
-          this.state.message ? $('div', { key: 'message' }, 'empty') : null,
+        return $(
+          "div",
+          null,
+          this.state.message ? $("div", { key: "message" }, "empty") : null,
           $(EchoChild, {
-            key: 'child',
+            key: "child",
             value: this.state.value,
             onValueApplied: () => {
               // The store-emit echo: request another update of the parent
@@ -56,25 +58,25 @@ describe('reentrant update of a component mid-patch', () => {
               etch.update(parent);
             },
           }),
-          $('div', { key: 'tail' }, 'tail')
+          $("div", { key: "tail" }, "tail"),
         );
       },
       update() {},
     };
 
     etch.initialize(parent);
-    assert.strictEqual(parent.element.textContent, 'emptyfirsttail');
+    assert.strictEqual(parent.element.textContent, "emptyfirsttail");
 
     // Change both the child's value (triggering the echo) and the sibling
     // list shape (so a double-patch corrupts child bookkeeping).
-    parent.state = { value: 'second', message: false };
+    parent.state = { value: "second", message: false };
     etch.updateSync(parent);
 
-    assert.strictEqual(parent.element.textContent, 'secondtail');
+    assert.strictEqual(parent.element.textContent, "secondtail");
 
     // The tree must still be diffable afterwards.
-    parent.state = { value: 'third', message: true };
+    parent.state = { value: "third", message: true };
     etch.updateSync(parent);
-    assert.strictEqual(parent.element.textContent, 'emptythirdtail');
+    assert.strictEqual(parent.element.textContent, "emptythirdtail");
   });
 });

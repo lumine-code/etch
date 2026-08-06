@@ -1,12 +1,12 @@
-const { describe, it } = require('node:test');
-const assert = require('node:assert');
+const { describe, it } = require("node:test");
+const assert = require("node:assert");
 
-require('../helpers/setup');
+require("../helpers/setup");
 
-const etch = require('../../lib/index');
+const etch = require("../../lib/index");
 
-describe('etch.destroySync(component)', () => {
-  it('synchronously removes the component\'s element from the document and calls `destroy` on child components', () => {
+describe("etch.destroySync(component)", () => {
+  it("synchronously removes the component's element from the document and calls `destroy` on child components", () => {
     class ParentComponent {
       constructor() {
         this.destroyCallCount = 0;
@@ -14,13 +14,11 @@ describe('etch.destroySync(component)', () => {
       }
 
       render() {
-        return (
-          etch.dom("div", null,
-          etch.dom("div", null,
-          etch.dom(ChildComponent, { ref: "child" })
-          )
-          ));
-
+        return etch.dom(
+          "div",
+          null,
+          etch.dom("div", null, etch.dom(ChildComponent, { ref: "child" })),
+        );
       }
 
       update() {}
@@ -51,7 +49,7 @@ describe('etch.destroySync(component)', () => {
 
     let parent = new ParentComponent();
     let child = parent.refs.child;
-    let container = document.createElement('div');
+    let container = document.createElement("div");
     container.appendChild(parent.element);
 
     etch.destroySync(parent);
@@ -62,23 +60,21 @@ describe('etch.destroySync(component)', () => {
     assert.notStrictEqual(child.element.parentElement, null); // Only removes the root node to avoid unnecessary DOM writes
   });
 
-  it('does not remove the DOM node when passed false as a second argument', () => {
+  it("does not remove the DOM node when passed false as a second argument", () => {
     class Component {
       constructor() {
         etch.initialize(this);
       }
 
       render() {
-        return (
-          etch.dom("div", null));
-
+        return etch.dom("div", null);
       }
 
       update() {}
     }
 
     let component = new Component();
-    let container = document.createElement('div');
+    let container = document.createElement("div");
     container.appendChild(component.element);
 
     etch.destroySync(component, false);

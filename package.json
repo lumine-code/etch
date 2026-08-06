@@ -33,9 +33,17 @@
   },
   "scripts": {
     "test": "npm run test:syntax && node --test test/unit/*.test.js",
-    "test:syntax": "node --check lib/index.js && node --check lib/dom.js && node --check lib/render.js && node --check lib/patch.js && node --check lib/update-props.js && node --check lib/component-helpers.js && node --check lib/default-scheduler.js && node --check lib/scheduler-assignment.js && node --check lib/update-ref.js && node --check lib/event-listener-props.js && node --check lib/svg-attribute-translations.js && node --check lib/svg-tags.js"
+    "test:syntax": "node --check lib/index.js && node --check lib/dom.js && node --check lib/render.js && node --check lib/patch.js && node --check lib/update-props.js && node --check lib/component-helpers.js && node --check lib/default-scheduler.js && node --check lib/scheduler-assignment.js && node --check lib/update-ref.js && node --check lib/event-listener-props.js && node --check lib/svg-attribute-translations.js && node --check lib/svg-tags.js",
+    "lint": "eslint . --max-warnings 0 && prettier --check .",
+    "format": "prettier --write ."
   },
   "devDependencies": {
-    "jsdom": "^30.0.1"
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-n": "^18.2.2",
+    "globals": "^17.9.0",
+    "jsdom": "^30.0.1",
+    "prettier": "^3.9.6"
   }
 }

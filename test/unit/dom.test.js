@@ -1,12 +1,12 @@
-const { describe, it } = require('node:test');
-const assert = require('node:assert');
+const { describe, it } = require("node:test");
+const assert = require("node:assert");
 
-require('../helpers/setup');
+require("../helpers/setup");
 
-const etch = require('../../lib/index');
+const etch = require("../../lib/index");
 
-describe('etch.dom', () => {
-  it('defaults properties to an empty object', () => {
+describe("etch.dom", () => {
+  it("defaults properties to an empty object", () => {
     let props = null;
 
     class MyComponent {
@@ -14,7 +14,9 @@ describe('etch.dom', () => {
         props = p;
       }
 
-      render() {return etch.dom("span", null);}
+      render() {
+        return etch.dom("span", null);
+      }
 
       update() {}
     }
@@ -24,60 +26,66 @@ describe('etch.dom', () => {
         return etch.dom(MyComponent, null);
       },
 
-      update() {}
+      update() {},
     };
 
     etch.initialize(owner);
     assert.deepStrictEqual(props, {});
   });
 
-  it('normalizes camel-cased property names to dash-seperated attributes for SVG tags', function () {
+  it("normalizes camel-cased property names to dash-seperated attributes for SVG tags", function () {
     let component = {
       render() {
         return etch.dom("circle", { colorProfile: "foo", colorRendering: "bar" });
       },
-      update() {}
+      update() {},
     };
 
     etch.initialize(component);
-    assert.strictEqual(component.element.outerHTML, '<circle color-profile="foo" color-rendering="bar"></circle>');
+    assert.strictEqual(
+      component.element.outerHTML,
+      '<circle color-profile="foo" color-rendering="bar"></circle>',
+    );
   });
 
-  it('supports assigning innerHTML to SVG tags', function () {
+  it("supports assigning innerHTML to SVG tags", function () {
     let component = {
       render() {
         return etch.dom("svg", { innerHTML: "<circle></circle>" });
       },
-      update() {}
+      update() {},
     };
 
     etch.initialize(component);
-    assert.strictEqual(component.element.outerHTML, '<svg><circle></circle></svg>');
+    assert.strictEqual(component.element.outerHTML, "<svg><circle></circle></svg>");
   });
 
-  it('ignores nulls and false passed in the place of children, but throws an error if other invalid values are passed', () => {
+  it("ignores nulls and false passed in the place of children, but throws an error if other invalid values are passed", () => {
     const element = etch.render(
-      etch.dom("div", null, etch.dom("span", null), null, false, etch.dom("p", null))
+      etch.dom("div", null, etch.dom("span", null), null, false, etch.dom("p", null)),
     );
 
-    assert.deepStrictEqual(Array.from(element.children).map((c) => c.tagName), ['SPAN', 'P']);
+    assert.deepStrictEqual(
+      Array.from(element.children).map((c) => c.tagName),
+      ["SPAN", "P"],
+    );
 
-    assert.throws(() => etch.render(
-      etch.dom("div", null, true)
-    ), /Invalid child node: true/);
+    assert.throws(() => etch.render(etch.dom("div", null, true)), /Invalid child node: true/);
 
-    assert.throws(() => etch.render(
-      etch.dom("div", null, undefined)
-    ), /Invalid child node: undefined/);
+    assert.throws(
+      () => etch.render(etch.dom("div", null, undefined)),
+      /Invalid child node: undefined/,
+    );
 
-    assert.throws(() => etch.render(
-      etch.dom("div", null, () => {})
-    ), /Invalid child node: \(\) => \{\}/);
+    assert.throws(
+      () => etch.render(etch.dom("div", null, () => {})),
+      /Invalid child node: \(\) => \{\}/,
+    );
   });
 
-  describe('when a component constructor is used as a tag name', () => {
-    describe('on initial render', () => {
-      it('constructs the component with the specified properties and children, then appends its element to the DOM', () => {
+  describe("when a component constructor is used as a tag name", () => {
+    describe("on initial render", () => {
+      it("constructs the component with the specified properties and children, then appends its element to the DOM", () => {
         class ChildComponent {
           constructor(properties, children) {
             this.properties = properties;
@@ -94,27 +102,25 @@ describe('etch.dom', () => {
 
         let parentComponent = {
           render() {
-            return (
-              etch.dom("div", null,
-              etch.dom(ChildComponent, { greeting: "Hello" },
-              etch.dom("span", null, "World")
-              )
-              ));
-
+            return etch.dom(
+              "div",
+              null,
+              etch.dom(ChildComponent, { greeting: "Hello" }, etch.dom("span", null, "World")),
+            );
           },
 
-          update() {}
+          update() {},
         };
 
         etch.initialize(parentComponent);
-        assert.strictEqual(parentComponent.element.textContent, 'Hello World');
+        assert.strictEqual(parentComponent.element.textContent, "Hello World");
       });
     });
 
-    describe('on update', () => {
-      describe('if the child component class is the same', () => {
-        describe('if the child component defines an update() method', () => {
-          it('invokes the update method with the new properties and children', async () => {
+    describe("on update", () => {
+      describe("if the child component class is the same", () => {
+        describe("if the child component defines an update() method", () => {
+          it("invokes the update method with the new properties and children", async () => {
             class ChildComponent {
               constructor(properties, children) {
                 this.properties = properties;
@@ -134,42 +140,42 @@ describe('etch.dom', () => {
             }
 
             let parentComponent = {
-              greeting: 'Hello',
-              greeted: 'World',
+              greeting: "Hello",
+              greeted: "World",
               render() {
-                return (
-                  etch.dom("div", null,
-                  etch.dom(ChildComponent, { greeting: this.greeting },
-                  etch.dom("span", null, this.greeted)
-                  )
-                  ));
-
+                return etch.dom(
+                  "div",
+                  null,
+                  etch.dom(
+                    ChildComponent,
+                    { greeting: this.greeting },
+                    etch.dom("span", null, this.greeted),
+                  ),
+                );
               },
 
-              update() {}
+              update() {},
             };
 
             etch.initialize(parentComponent);
-            assert.strictEqual(parentComponent.element.textContent, 'Hello World');
+            assert.strictEqual(parentComponent.element.textContent, "Hello World");
             let initialChildElement = parentComponent.element.firstChild;
 
-            parentComponent.greeting = 'Goodnight';
-            parentComponent.greeted = 'Moon';
+            parentComponent.greeting = "Goodnight";
+            parentComponent.greeted = "Moon";
             await etch.update(parentComponent);
 
-            assert.strictEqual(parentComponent.element.textContent, 'Goodnight Moon');
+            assert.strictEqual(parentComponent.element.textContent, "Goodnight Moon");
             assert.strictEqual(parentComponent.element.firstChild, initialChildElement);
           });
         });
 
-        describe('if the child component does not define an update method', () => {
-          it('throws an error', async () => {
+        describe("if the child component does not define an update method", () => {
+          it("throws an error", async () => {
             let component = {
               render() {
-                return (
-                  etch.dom("div", null));
-
-              }
+                return etch.dom("div", null);
+              },
             };
 
             assert.throws(() => etch.initialize(component), Error);
@@ -177,8 +183,8 @@ describe('etch.dom', () => {
         });
       });
 
-      describe('if the component class changes', () => {
-        it('builds a new component instance and replaces the previous element with its element', async () => {
+      describe("if the component class changes", () => {
+        it("builds a new component instance and replaces the previous element with its element", async () => {
           class ChildComponentA {
             constructor() {
               etch.initialize(this);
@@ -214,23 +220,23 @@ describe('etch.dom', () => {
               }
             },
 
-            update() {}
+            update() {},
           };
 
           etch.initialize(parentComponent);
-          assert.strictEqual(parentComponent.element.textContent, 'A');
+          assert.strictEqual(parentComponent.element.textContent, "A");
           let initialChildElement = parentComponent.element.firstChild;
 
           parentComponent.condition = false;
           await etch.update(parentComponent);
 
-          assert.strictEqual(parentComponent.element.textContent, 'B');
+          assert.strictEqual(parentComponent.element.textContent, "B");
           assert.notStrictEqual(parentComponent.element.firstChild, initialChildElement);
         });
       });
 
-      describe('if components are reordered', () => {
-        it('builds a new component instance and replaces the previous element with its element', async () => {
+      describe("if components are reordered", () => {
+        it("builds a new component instance and replaces the previous element with its element", async () => {
           class ChildComponentA {
             constructor() {
               this.updateCalled = false;
@@ -266,23 +272,23 @@ describe('etch.dom', () => {
 
             render() {
               if (this.condition) {
-                return (
-                  etch.dom("div", null,
+                return etch.dom(
+                  "div",
+                  null,
                   etch.dom(ChildComponentA, { key: "a", ref: "a" }),
-                  etch.dom(ChildComponentB, { key: "b", ref: "b" })
-                  ));
-
-              } else {
-                return (
-                  etch.dom("div", null,
                   etch.dom(ChildComponentB, { key: "b", ref: "b" }),
-                  etch.dom(ChildComponentA, { key: "a", ref: "a" })
-                  ));
-
+                );
+              } else {
+                return etch.dom(
+                  "div",
+                  null,
+                  etch.dom(ChildComponentB, { key: "b", ref: "b" }),
+                  etch.dom(ChildComponentA, { key: "a", ref: "a" }),
+                );
               }
             },
 
-            update() {}
+            update() {},
           };
 
           etch.initialize(parentComponent);
@@ -309,8 +315,8 @@ describe('etch.dom', () => {
       });
     });
 
-    describe('when the child component constructor tag has a ref property', () => {
-      it('creates a reference to the child component object on the parent component', async () => {
+    describe("when the child component constructor tag has a ref property", () => {
+      it("creates a reference to the child component object on the parent component", async () => {
         class ChildComponentA {
           constructor(properties) {
             this.properties = properties;
@@ -341,7 +347,7 @@ describe('etch.dom', () => {
 
         let parentComponent = {
           renderA: true,
-          refName: 'child',
+          refName: "child",
 
           render() {
             if (this.renderA) {
@@ -353,39 +359,39 @@ describe('etch.dom', () => {
             }
           },
 
-          update() {}
+          update() {},
         };
 
         etch.initialize(parentComponent);
 
         assert.strictEqual(parentComponent.refs.child instanceof ChildComponentA, true);
-        assert.strictEqual(parentComponent.refs.child.properties.ref, 'child');
-        assert.strictEqual(parentComponent.refs.child.refs.self.textContent, 'A');
+        assert.strictEqual(parentComponent.refs.child.properties.ref, "child");
+        assert.strictEqual(parentComponent.refs.child.refs.self.textContent, "A");
 
-        parentComponent.refName = 'kid';
+        parentComponent.refName = "kid";
         await etch.update(parentComponent);
 
         assert.strictEqual(parentComponent.refs.child, undefined);
         assert.strictEqual(parentComponent.refs.kid instanceof ChildComponentA, true);
-        assert.strictEqual(parentComponent.refs.kid.properties.ref, 'kid');
-        assert.strictEqual(parentComponent.refs.kid.refs.self.textContent, 'A');
+        assert.strictEqual(parentComponent.refs.kid.properties.ref, "kid");
+        assert.strictEqual(parentComponent.refs.kid.refs.self.textContent, "A");
 
-        parentComponent.refName = 'child';
+        parentComponent.refName = "child";
         parentComponent.renderA = false;
         parentComponent.renderB = true;
         await etch.update(parentComponent);
 
         assert.strictEqual(parentComponent.refs.kid, undefined);
         assert.strictEqual(parentComponent.refs.child instanceof ChildComponentB, true);
-        assert.strictEqual(parentComponent.refs.child.properties.ref, 'child');
-        assert.strictEqual(parentComponent.refs.child.refs.self.textContent, 'B');
+        assert.strictEqual(parentComponent.refs.child.properties.ref, "child");
+        assert.strictEqual(parentComponent.refs.child.refs.self.textContent, "B");
 
         parentComponent.renderB = false;
         await etch.update(parentComponent);
-        assert.strictEqual('child' in parentComponent.refs, false);
+        assert.strictEqual("child" in parentComponent.refs, false);
       });
 
-      it('does not delete a reference to a different component when a component is destroyed', async function () {
+      it("does not delete a reference to a different component when a component is destroyed", async function () {
         class ChildComponentA {
           constructor() {
             etch.initialize(this);
@@ -395,7 +401,7 @@ describe('etch.dom', () => {
             return etch.dom("div", null, "A");
           }
 
-          update(properties) {}
+          update(_properties) {}
         }
 
         class ChildComponentB {
@@ -415,22 +421,18 @@ describe('etch.dom', () => {
 
           render() {
             if (this.condition) {
-              return (
-                etch.dom("div", null,
+              return etch.dom(
+                "div",
+                null,
                 etch.dom("div", null),
-                etch.dom(ChildComponentA, { ref: "child" })
-                ));
-
+                etch.dom(ChildComponentA, { ref: "child" }),
+              );
             } else {
-              return (
-                etch.dom("div", null,
-                etch.dom(ChildComponentB, { ref: "child" })
-                ));
-
+              return etch.dom("div", null, etch.dom(ChildComponentB, { ref: "child" }));
             }
           },
 
-          update() {}
+          update() {},
         };
 
         etch.initialize(parentComponent);

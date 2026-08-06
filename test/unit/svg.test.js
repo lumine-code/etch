@@ -1,18 +1,18 @@
-const { describe, it } = require('node:test');
-const assert = require('node:assert');
+const { describe, it } = require("node:test");
+const assert = require("node:assert");
 
-require('../helpers/setup');
+require("../helpers/setup");
 
-const etch = require('../../lib/index');
+const etch = require("../../lib/index");
 
-describe('svg support', () => {
-  it('sets the correct tag thingies', () => {
+describe("svg support", () => {
+  it("sets the correct tag thingies", () => {
     let component = {
       render() {
         return etch.dom("svg", null, etch.dom("path", { ref: "path" }));
       },
 
-      update() {}
+      update() {},
     };
 
     etch.initialize(component);
@@ -20,16 +20,16 @@ describe('svg support', () => {
     assert.strictEqual(elem.constructor, SVGSVGElement);
   });
 
-  it('translates className props to class', () => {
+  it("translates className props to class", () => {
     let component = {
       render() {
         return etch.dom("svg", { className: "myclass" });
       },
 
-      update() {}
+      update() {},
     };
 
     etch.initialize(component);
-    assert.strictEqual(component.element.classList[0], 'myclass');
+    assert.strictEqual(component.element.classList[0], "myclass");
   });
 });
