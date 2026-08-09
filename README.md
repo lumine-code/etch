@@ -14,7 +14,7 @@ Etch is a library for writing HTML-based user interface components that provides
 - **Event binding**: `on` objects and `onClick`-style properties attach listeners bound to the component.
 - **Keyed lists**: `key` properties enable minimal reordering of frequently changing lists.
 - **Fragments**: `etch.Fragment` groups sibling children without adding an element to wrap them.
-- **Pluggable scheduler**: DOM read/write coordination can be delegated to a host application scheduler such as `atom.views`.
+- **Pluggable scheduler**: DOM read/write coordination can be delegated to a host application scheduler such as `lumine.views`.
 - **SVG support**: SVG tags render in the proper namespace with attribute-name translation.
 
 ## Installation
@@ -426,7 +426,7 @@ Etch exports a `setScheduler` method that allows you to override the scheduler i
 For example, when using Etch in Lumine, you should set the scheduler as follows:
 
 ```js
-etch.setScheduler(atom.views);
+etch.setScheduler(lumine.views);
 ```
 
 Read comments in the [scheduler assignment][scheduler-assignment] and [default scheduler][default-scheduler] source code for more information on implementing your own scheduler.
