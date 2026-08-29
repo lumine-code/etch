@@ -132,4 +132,40 @@ describe("multi-document rendering", () => {
     assert.strictEqual(component.element.textContent, "after");
     etch.setScheduler(null);
   });
+
+  it("destroys synchronously after its iframe Document loses its Window", async () => {
+    const frame = document.createElement("iframe");
+    document.body.appendChild(frame);
+    const frameDocument = frame.contentDocument;
+    const component = {
+      update() {},
+      render() {
+        return etch.dom("div", null, "detached");
+      },
+    };
+    etch.initialize(component, { document: frameDocument });
+    frameDocument.body.appendChild(component.element);
+    frame.remove();
+
+    // Chromium clears this when the iframe/native surface is destroyed. JSDOM
+    // keeps the old Window alive, so reproduce the observable dead-Document
+    // state after removing the iframe.
+    Object.defineProperty(frameDocument, "defaultView", {
+      configurable: true,
+      value: null,
+    });
+    let schedulerRequested = false;
+    etch.setScheduler({
+      forDocument() {
+        schedulerRequested = true;
+        throw new Error("A dead Document has no scheduler");
+      },
+    });
+
+    await etch.destroy(component);
+
+    assert.strictEqual(schedulerRequested, false);
+    assert.strictEqual(component.element.parentNode, null);
+    etch.setScheduler(null);
+  });
 });
