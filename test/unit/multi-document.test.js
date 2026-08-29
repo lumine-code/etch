@@ -168,4 +168,40 @@ describe("multi-document rendering", () => {
     assert.strictEqual(component.element.parentNode, null);
     etch.setScheduler(null);
   });
+
+  it("uses the global scheduler directly for an inert Document", async () => {
+    const inertDocument = document.implementation.createHTMLDocument("inert");
+    const writes = [];
+    let documentSchedulerRequested = false;
+    etch.setScheduler({
+      forDocument() {
+        documentSchedulerRequested = true;
+        throw new Error("An inert Document has no document scheduler");
+      },
+      updateDocument(callback) {
+        writes.push(callback);
+      },
+      getNextUpdatePromise() {
+        return Promise.resolve();
+      },
+    });
+    const component = {
+      value: "before",
+      update() {},
+      render() {
+        return etch.dom("div", null, this.value);
+      },
+    };
+    etch.initialize(component, { document: inertDocument });
+
+    component.value = "after";
+    await etch.update(component);
+
+    assert.strictEqual(documentSchedulerRequested, false);
+    assert.strictEqual(writes.length, 1);
+    writes.shift()();
+    assert.strictEqual(component.element.textContent, "after");
+    await etch.destroy(component);
+    etch.setScheduler(null);
+  });
 });
