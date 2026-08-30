@@ -96,8 +96,6 @@ Use Etch's three lifecycle functions to associate a component with a DOM element
 
 This function associates a component object with a DOM element. Its only requirement is that the object you pass to it has a `render` method that returns a virtual DOM tree constructed with the `etch.dom` helper ([Babel][babel] can be configured to compile JSX expressions to `etch.dom` calls). This function calls `render` and uses the result to build a DOM element, which it assigns to the `.element` property on your component object. `etch.initialize` also assigns any references (discussed later) to a `.refs` object on your component.
 
-Pass `{document}` as the second argument when the component is born in a secondary same-origin window: `etch.initialize(this, {document})`. The document is inherited by nested components created during that render. Later updates derive their document from `component.element.ownerDocument`, so adopting the same component tree into another document makes every newly patched HTML, SVG and text node local to the destination realm.
-
 This function is typically called at the end of your component's constructor:
 
 ```js
@@ -424,8 +422,6 @@ class StatefulComponent {
 ### Customizing the scheduler
 
 Etch exports a `setScheduler` method that allows you to override the scheduler it uses to coordinate DOM writes. When using Etch inside a larger application, it may be important to coordinate Etch's DOM interactions with other libraries to avoid synchronous reflows.
-
-`setSchedulerForDocument(document, scheduler)` overrides one document only. When the global scheduler supplied through `setScheduler` implements `forDocument(document)`, Etch asks it for a document-scoped scheduler automatically; otherwise the global scheduler remains the fallback. Without either override, Etch creates one default scheduler per document and uses that document's own animation frame source.
 
 For example, when using Etch in Lumine, you should set the scheduler as follows:
 
