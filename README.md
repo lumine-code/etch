@@ -431,10 +431,10 @@ etch.setScheduler(lumine.views);
 
 Read comments in the [scheduler assignment][scheduler-assignment] and [default scheduler][default-scheduler] source code for more information on implementing your own scheduler.
 
-## Contributing
-
-Got ideas to make this package better, found a bug, or want to help add new features? Just drop your thoughts on GitHub. Any feedback is welcome!
-
 [babel]: https://babeljs.io/
 [scheduler-assignment]: https://github.com/lumine-code/etch/blob/master/lib/scheduler-assignment.js
 [default-scheduler]: https://github.com/lumine-code/etch/blob/master/lib/default-scheduler.js
+
+## Contributing
+
+Got ideas to make this package better, found a bug, or want to help add new features? Just drop your thoughts on GitHub. Any feedback is welcome!
