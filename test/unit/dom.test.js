@@ -12,6 +12,7 @@ describe("etch.dom", () => {
     class MyComponent {
       constructor(p) {
         props = p;
+        etch.initialize(this);
       }
 
       render() {
