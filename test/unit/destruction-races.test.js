@@ -121,4 +121,48 @@ describe("destruction with scheduled work", () => {
     assert.equal(component.element.textContent, "2");
     etch.destroySync(component);
   });
+
+  it("clears DOM and component refs once after destroying their owners", () => {
+    const calls = [];
+    class Child {
+      constructor() {
+        this.destroyed = false;
+        etch.initialize(this);
+      }
+      render() {
+        return etch.dom("span", { ref: "element" }, "child");
+      }
+      update() {}
+      destroy() {
+        this.destroyed = true;
+        etch.destroySync(this);
+      }
+    }
+    const parent = {
+      render() {
+        return etch.dom(
+          "div",
+          { ref: "root" },
+          etch.dom("button", { ref: (value) => calls.push(["button", value]) }),
+          etch.dom(Child, { ref: (value) => calls.push(["child", value]) }),
+          etch.dom(Child, { ref: "child" }),
+        );
+      },
+      update() {},
+    };
+    etch.initialize(parent);
+    const firstChild = calls.find(([name]) => name === "child")[1];
+    const secondChild = parent.refs.child;
+    etch.destroySync(parent);
+    etch.destroySync(parent);
+    assert.deepEqual(calls.slice(-2), [
+      ["button", null],
+      ["child", null],
+    ]);
+    assert.equal(firstChild.destroyed, true);
+    assert.equal(secondChild.destroyed, true);
+    assert.deepEqual(parent.refs, {});
+    assert.deepEqual(firstChild.refs, {});
+    assert.deepEqual(secondChild.refs, {});
+  });
 });
